@@ -9,3 +9,7 @@ h1 {
 div {
 	border: 1px solid black;
 }
+
+.state {
+	stroke: 1px solid black;
+}
