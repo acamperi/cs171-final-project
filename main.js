@@ -30,6 +30,8 @@ var bbDetailVis = {
 	h: 600 - detailVisMargin.top - detailVisMargin.bottom
 };
 
+var centered;
+
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
 // ==============================
@@ -52,6 +54,9 @@ var detailVisFrames = d3.selectAll(".detailVis")
 	.append("g")
 		.attr("transform", "translate(" + bbDetailVis.x + "," + bbDetailVis.y + ")")
 
+var projection = d3.geo.albersUsa().translate([bbMainVis.w / 2, bbMainVis.h / 2]);//.precision(.1);
+var path = d3.geo.path().projection(projection);
+
 // ============================
 //   MAIN VISUALIZATION SETUP
 // ============================
@@ -72,12 +77,47 @@ var loadMap = function() {
 	d3.json("../data/us-named.json", function(error, data) {
 	    var usMap = topojson.feature(data,data.objects.states).features;
 
+    	mainVisFrame.selectAll(".states")
+	        .data(usMap)
+	        .enter()
+	        .append("path")
+	        .attr("d", path)
+	        .on("click", clicked);
 	    // make map here, for now just draw without setting color for states
+
+	    console.log("data");
 
 	    // load in actual data
 	    loadStateData();
 	});
 };
+
+// geometric zoom
+// "borrowed" (modified from) http://bl.ocks.org/mbostock/2206590
+function clicked(d) {
+  var x, y, k;
+
+  if (d && centered !== d) {
+    var centroid = path.centroid(d);
+    x = centroid[0];
+    y = centroid[1];
+    k = 4;
+    centered = d;
+  } else {
+    x = bbMainVis.w / 2;
+    y = bbMainVis.h / 2;
+    k = 1;
+    centered = null;
+  }
+
+  mainVisFrame.selectAll("path")
+      .classed("active", centered && function(d) { return d === centered; });
+
+  mainVisFrame.transition()
+      .duration(750)
+      .attr("transform", "translate(" + bbMainVis.w / 2 + "," + bbMainVis.h / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+      .style("stroke-width", 1.5 / k + "px");
+}
 
 // ===============================
 //   DETAIL VISUALIZATIONS SETUP
@@ -89,4 +129,4 @@ var loadMap = function() {
 //   LAUNCH VISUALIZATION
 // ========================
 
-// loadMap();
+loadMap();
