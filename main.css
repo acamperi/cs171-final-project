@@ -13,11 +13,33 @@ body {
 h1 {
 	font-family: 'Exo', sans-serif;
 	font-weight: 700;
-	text-align: center;
+	text-align: left;
 	color: #FFFFFF;
+	line-height: 10pt;
+	font-size: 30pt;
+}
+
+h4 {
+	font-family: 'Roboto Slab', serif;
+	font-weight: 400;
+	text-align: left;
+	color: #DDDDDD;
+	font-size: 12pt;
+	-webkit-margin-after: 0px;
 }
 
 div {
+	padding-left: 50px;
+	padding-right: 50px;
+	padding-bottom: 10px;
+}
+
+sup {
+	font-size: 50%;
+	opacity: 0.5;
+}
+
+.detailVis {
 	border: 1px dashed gray;
 }
 
@@ -36,4 +58,8 @@ div {
 	stroke-width: 1px;
 	fill: #CCCCCC;
 	stroke: #FFFFFF;
+}
+
+#headerArea {
+	padding-top: 30px;
 }

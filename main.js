@@ -13,7 +13,7 @@ var bbMainVis = {
 	x: 0,
 	y: 0,
 	w: 900 - mainVisMargin.left - mainVisMargin.right,
-	h: 600 - mainVisMargin.top - mainVisMargin.bottom
+	h: 500 - mainVisMargin.top - mainVisMargin.bottom
 };
 
 var detailVisMargin = {
@@ -128,25 +128,25 @@ var loadMap = function() {
 
 // click & drag functionality, from http://techslides.com/demos/d3/worldmap-template.html
 function move() {
-  var t = d3.event.translate;
-  var s = d3.event.scale; 
-  zscale = s;
-  var h = bbMainVis.h/4;
+	var t = d3.event.translate;
+	var s = d3.event.scale; 
+	zscale = s;
+	var h = bbMainVis.h/4;
 
-  t[0] = Math.min(
-    (bbMainVis.w/bbMainVis.h)  * (s - 1), 
-    Math.max(bbMainVis.w * (1 - s), t[0] )
-  );
-  t[1] = Math.min(
-    h * (s - 1) + h * s, 
-    Math.max(bbMainVis.h  * (1 - s) - h * s, t[1])
-  );
+	t[0] = Math.min(
+		(bbMainVis.w/bbMainVis.h)  * (s - 1), 
+		Math.max(bbMainVis.w * (1 - s), t[0] )
+	);
+	t[1] = Math.min(
+		h * (s - 1) + h * s, 
+		Math.max(bbMainVis.h  * (1 - s) - h * s, t[1])
+	);
 
-  zoom.translate(t);
-  mainVisFrame.attr("transform", "translate(" + t + ")scale(" + s + ")");
+	zoom.translate(t);
+	mainVisFrame.attr("transform", "translate(" + t + ")scale(" + s + ")");
 
-  //adjust the state hover stroke width based on zoom level
-  d3.selectAll(".state").style("stroke-width", 1 / s);
+	//adjust the state hover stroke width based on zoom level
+	d3.selectAll(".state").style("stroke-width", 1 / s);
 }
 
 //geo translation on mouse click in map
