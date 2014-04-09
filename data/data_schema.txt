@@ -7,6 +7,7 @@ id: {
 	city,
 	state,
 	zip,
+	lonlat: [ lon, lat ],
 	sector_id,
 	sector,
 	endowment_assets,
