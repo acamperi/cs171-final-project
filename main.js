@@ -12,8 +12,8 @@ var mainVisMargin = {
 var bbMainVis = {
 	x: 0,
 	y: 0,
-	w: 1000 - mainVisMargin.left - mainVisMargin.right,
-	h: 700 - mainVisMargin.top - mainVisMargin.bottom
+	w: 900 - mainVisMargin.left - mainVisMargin.right,
+	h: 600 - mainVisMargin.top - mainVisMargin.bottom
 };
 
 var detailVisMargin = {
@@ -35,10 +35,12 @@ var bbDetailVis = {
 // ===============================
 
 var zoom = d3.behavior.zoom()
-    .scaleExtent([1, 9])
+    .scaleExtent([1, 10])
     .on("zoom", move);
 
 var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip hidden");
+
+var centered;
 
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
@@ -96,20 +98,24 @@ var loadMap = function() {
 	        .attr("d", path)
 	        .attr("title", function(d,i) { return d.properties.name; });
 
-	    // offsets for tooltips, from http://techslides.com/demos/d3/worldmap-template.html
-		var offsetL = document.getElementById('mainVis').offsetLeft+20;
-		var offsetT = document.getElementById('mainVis').offsetTop+10;
+	    states.attr("class", "state")
+	    	.attr("stroke", "white")
+	    	.on("click", clicked);
 
-		// tooltips, from http://techslides.com/demos/d3/worldmap-template.html
-		states.on("mousemove", function(d,i) {
-			var mouse = d3.mouse(mainVisFrame.node()).map( function(d) { return parseInt(d); } );
-			tooltip.classed("hidden", false)
-		        .attr("style", "left:"+(mouse[0]+offsetL)+"px;top:"+(mouse[1]+offsetT)+"px")
-		        .html(d.properties.name);
-		  	})
-		  	.on("mouseout",  function(d,i) {
-		    	tooltip.classed("hidden", true);
-		  	}); 
+	 //    // offsets for tooltips, from http://techslides.com/demos/d3/worldmap-template.html
+		// var offsetL = document.getElementById('mainVis').offsetLeft+20;
+		// var offsetT = document.getElementById('mainVis').offsetTop+10;
+
+		// // tooltips, from http://techslides.com/demos/d3/worldmap-template.html
+		// states.on("mousemove", function(d,i) {
+		// 	var mouse = d3.mouse(mainVisFrame.node()).map( function(d) { return parseInt(d); } );
+		// 	tooltip.classed("hidden", false)
+		//         .attr("style", "left:"+(mouse[0]+offsetL)+"px;top:"+(mouse[1]+offsetT)+"px")
+		//         .html(d.properties.name);
+		//   	})
+		//   	.on("mouseout",  function(d,i) {
+		//     	tooltip.classed("hidden", true);
+		//   	}); 
 
 		// load in actual data
 		loadStateData();
@@ -139,14 +145,42 @@ function move() {
   zoom.translate(t);
   mainVisFrame.attr("transform", "translate(" + t + ")scale(" + s + ")");
 
-  //adjust the country hover stroke width based on zoom level
-  d3.selectAll(".state").style("stroke-width", 1.5 / s);
+  //adjust the state hover stroke width based on zoom level
+  d3.selectAll(".state").style("stroke-width", 1 / s);
 }
 
 //geo translation on mouse click in map
 function click() {
   var latlon = projection.invert(d3.mouse(this));
   console.log(latlon);
+}
+
+function clicked(d) {
+  var x, y, k;
+
+	if (d && centered !== d) {
+		var centroid = path.centroid(d);
+		x = centroid[0];
+		y = centroid[1];
+		k = 4;
+		centered = d;
+	}
+	else {
+		x = bbMainVis.w / 2;
+		y = bbMainVis.h / 2;
+		k = 1;
+		centered = null;
+	}
+
+  	mainVisFrame.selectAll("path")
+      	.classed("active", centered && function(d) { return d === centered; });
+
+    // There needs to be a zoom function below but I'm not sure what to put there.
+  	mainVisFrame.transition()
+      	.duration(750)
+      	.attr("transform", "translate(" + bbMainVis.w / 2 + "," + bbMainVis.h / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+  
+  	d3.selectAll(".state").transition().duration(750).style("stroke-width", 1 / k);
 }
 
 // ===============================

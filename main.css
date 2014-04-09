@@ -1,15 +1,39 @@
+/*font-family: 'Exo', sans-serif;*/
+/*font-family: 'Roboto Slab', serif;*/
+
+
+html {
+	background-color: #222222;
+}
+
 body {
 	font-family: sans-serif;
 }
 
 h1 {
+	font-family: 'Exo', sans-serif;
+	font-weight: 700;
 	text-align: center;
+	color: #FFFFFF;
 }
 
 div {
-	border: 1px solid black;
+	border: 1px dashed gray;
 }
 
 .state {
-	stroke: 1px solid black;
+	stroke-width: 1px;
+	fill: #444444;
+	stroke: #666666;
+}
+
+.bar {
+	fill: #CC3333;
+	stroke: #AA0000;
+}
+
+.school {
+	stroke-width: 1px;
+	fill: #CCCCCC;
+	stroke: #FFFFFF;
 }
