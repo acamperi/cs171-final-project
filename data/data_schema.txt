@@ -1,0 +1,259 @@
+institutionsData101112.json:
+============================
+id: {
+	name,
+	branch,
+	address,
+	city,
+	state,
+	zip,
+	sector_id,
+	sector,
+	endowment_assets,
+	crime: {
+		total,
+		murder,
+		negligent_manslaughter,
+		forcible_sex_offense,
+		nonforcible_sex_offense,
+		robbery,
+		aggravated_assault,
+		burglary,
+		motor_vehicle_theft,
+		arson,
+		non_campus: {
+			total,
+			murder,
+			negligent_manslaughter,
+			forcible_sex_offense,
+			nonforcible_sex_offense,
+			robbery,
+			aggravated_assault,
+			burglary,
+			motor_vehicle_theft,
+			arson
+		},
+		on_campus: {
+			total,
+			murder,
+			negligent_manslaughter,
+			forcible_sex_offense,
+			nonforcible_sex_offense,
+			robbery,
+			aggravated_assault,
+			burglary,
+			motor_vehicle_theft,
+			arson
+		},
+		public_property: {
+			total,
+			murder,
+			negligent_manslaughter,
+			forcible_sex_offense,
+			nonforcible_sex_offense,
+			robbery,
+			aggravated_assault,
+			burglary,
+			motor_vehicle_theft,
+			arson
+		},
+		residence_hall: {
+			total,
+			murder,
+			negligent_manslaughter,
+			forcible_sex_offense,
+			nonforcible_sex_offense,
+			robbery,
+			aggravated_assault,
+			burglary,
+			motor_vehicle_theft,
+			arson
+		}
+	},
+	demographics: {
+		total, total_men, total_women,
+		american_indian_alaska_native_total, american_indian_alaska_native_men, american_indian_alaska_native_women,
+		asian_total, asian_men, asian_women,
+		black_african_american_total, black_african_american_men, black_african_american_women,
+		hispanic_latino_total, hispanic_latino_men, hispanic_latino_women,
+		native_hawaiian_other_pacific_islander_total, native_hawaiian_other_pacific_islander_men, native_hawaiian_other_pacific_islander_women,
+		white_total, white_men, white_women,
+		two_plus_races_total, two_plus_races_men, two_plus_races_women,
+		unknown_total, unknown_men, unknown_women,
+		nonresident_alien_total, nonresident_alien_men, nonresident_alien_women,
+		undergrad: {
+			total, total_men, total_women,
+			american_indian_alaska_native_total, american_indian_alaska_native_men, american_indian_alaska_native_women,
+			asian_total, asian_men, asian_women,
+			black_african_american_total, black_african_american_men, black_african_american_women,
+			hispanic_latino_total, hispanic_latino_men, hispanic_latino_women,
+			native_hawaiian_other_pacific_islander_total, native_hawaiian_other_pacific_islander_men, native_hawaiian_other_pacific_islander_women,
+			white_total, white_men, white_women,
+			two_plus_races_total, two_plus_races_men, two_plus_races_women,
+			unknown_total, unknown_men, unknown_women,
+			nonresident_alien_total, nonresident_alien_men, nonresident_alien_women
+		},
+		grad: {
+			total, total_men, total_women,
+			american_indian_alaska_native_total, american_indian_alaska_native_men, american_indian_alaska_native_women,
+			asian_total, asian_men, asian_women,
+			black_african_american_total, black_african_american_men, black_african_american_women,
+			hispanic_latino_total, hispanic_latino_men, hispanic_latino_women,
+			native_hawaiian_other_pacific_islander_total, native_hawaiian_other_pacific_islander_men, native_hawaiian_other_pacific_islander_women,
+			white_total, white_men, white_women,
+			two_plus_races_total, two_plus_races_men, two_plus_races_women,
+			unknown_total, unknown_men, unknown_women,
+			nonresident_alien_total, nonresident_alien_men, nonresident_alien_women
+		}
+	},
+	finaid: {
+		average,
+		income_0_30000,
+		income_30001_48000,
+		income_48001_75000,
+		income_75001_110000,
+		income_110001_more
+	},
+	tuition: {
+		average, in_state, out_of_state,
+		undergrad: {
+			average, in_state, out_of_state
+		},
+		grad: {
+			average, in_state, out_of_state
+		}
+	}
+}
+
+
+statesData101112.json:
+======================
+{
+	code,
+	endowment_assets,
+	general_crime: {
+		total,
+		violent_crime,
+		murder_nonnegligent_manslaughter,
+		forcible_rape,
+		robbery,
+		aggravated_assault,
+		property_crime,
+		burglary,
+		larceny,
+		motor_vehicle_theft
+	},
+	college_crime: {
+		total,
+		murder,
+		negligent_manslaughter,
+		forcible_sex_offense,
+		nonforcible_sex_offense,
+		robbery,
+		aggravated_assault,
+		burglary,
+		motor_vehicle_theft,
+		arson,
+		non_campus: {
+			total,
+			murder,
+			negligent_manslaughter,
+			forcible_sex_offense,
+			nonforcible_sex_offense,
+			robbery,
+			aggravated_assault,
+			burglary,
+			motor_vehicle_theft,
+			arson
+		},
+		on_campus: {
+			total,
+			murder,
+			negligent_manslaughter,
+			forcible_sex_offense,
+			nonforcible_sex_offense,
+			robbery,
+			aggravated_assault,
+			burglary,
+			motor_vehicle_theft,
+			arson
+		},
+		public_property: {
+			total,
+			murder,
+			negligent_manslaughter,
+			forcible_sex_offense,
+			nonforcible_sex_offense,
+			robbery,
+			aggravated_assault,
+			burglary,
+			motor_vehicle_theft,
+			arson
+		},
+		residence_hall: {
+			total,
+			murder,
+			negligent_manslaughter,
+			forcible_sex_offense,
+			nonforcible_sex_offense,
+			robbery,
+			aggravated_assault,
+			burglary,
+			motor_vehicle_theft,
+			arson
+		}
+	},
+	demographics: {
+		total, total_men, total_women,
+		american_indian_alaska_native_total, american_indian_alaska_native_men, american_indian_alaska_native_women,
+		asian_total, asian_men, asian_women,
+		black_african_american_total, black_african_american_men, black_african_american_women,
+		hispanic_latino_total, hispanic_latino_men, hispanic_latino_women,
+		native_hawaiian_other_pacific_islander_total, native_hawaiian_other_pacific_islander_men, native_hawaiian_other_pacific_islander_women,
+		white_total, white_men, white_women,
+		two_plus_races_total, two_plus_races_men, two_plus_races_women,
+		unknown_total, unknown_men, unknown_women,
+		nonresident_alien_total, nonresident_alien_men, nonresident_alien_women,
+		undergrad: {
+			total, total_men, total_women,
+			american_indian_alaska_native_total, american_indian_alaska_native_men, american_indian_alaska_native_women,
+			asian_total, asian_men, asian_women,
+			black_african_american_total, black_african_american_men, black_african_american_women,
+			hispanic_latino_total, hispanic_latino_men, hispanic_latino_women,
+			native_hawaiian_other_pacific_islander_total, native_hawaiian_other_pacific_islander_men, native_hawaiian_other_pacific_islander_women,
+			white_total, white_men, white_women,
+			two_plus_races_total, two_plus_races_men, two_plus_races_women,
+			unknown_total, unknown_men, unknown_women,
+			nonresident_alien_total, nonresident_alien_men, nonresident_alien_women
+		},
+		grad: {
+			total, total_men, total_women,
+			american_indian_alaska_native_total, american_indian_alaska_native_men, american_indian_alaska_native_women,
+			asian_total, asian_men, asian_women,
+			black_african_american_total, black_african_american_men, black_african_american_women,
+			hispanic_latino_total, hispanic_latino_men, hispanic_latino_women,
+			native_hawaiian_other_pacific_islander_total, native_hawaiian_other_pacific_islander_men, native_hawaiian_other_pacific_islander_women,
+			white_total, white_men, white_women,
+			two_plus_races_total, two_plus_races_men, two_plus_races_women,
+			unknown_total, unknown_men, unknown_women,
+			nonresident_alien_total, nonresident_alien_men, nonresident_alien_women
+		}
+	},
+	finaid: {
+		average,
+		income_0_30000,
+		income_30001_48000,
+		income_48001_75000,
+		income_75001_110000,
+		income_110001_more
+	},
+	tuition: {
+		average, in_state, out_of_state,
+		undergrad: {
+			average, in_state, out_of_state
+		},
+		grad: {
+			average, in_state, out_of_state
+		}
+	}
+}
