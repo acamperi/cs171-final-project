@@ -32,13 +32,15 @@ var bbDetailVis = {
 
 var genderBarVis = {
 	x: 0,
-	y: 30,
+	y: 50,
 	w: 300,
 	h: 100,
 	barheight: 30
 };
 
 var racePieVis = {
+	x: genderBarVis.x,
+	y: genderBarVis.y + genderBarVis.h,
 	w: 300,		//width
 	h: 300,		//height
 	r: 100		//radius
@@ -212,6 +214,7 @@ function clicked(d) {
       	.classed("active", centered && function(d) { return d === centered; });
 
     // There needs to be a zoom function below but I'm not sure what to put there.
+    // TODO: Figure out how to coordinate zoom functionality
   	mainVisFrame.transition()
       	.duration(750)
       	.attr("transform", "translate(" + bbMainVis.w / 2 + "," + bbMainVis.h / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
@@ -304,9 +307,8 @@ function genderize() {
 
 		genderBars.append("text")
 			.attr("class", "detailVisHeader")
-			.attr("x", 0)
-			.attr("y", 20)
-			.attr("anchor", "top")
+			.attr("x", genderBarVis.x)
+			.attr("y", genderBarVis.y - 10)
 			.text("Gender");
 
 		var maleBar = genderBars.append("rect")
@@ -346,13 +348,10 @@ function genderize() {
 	}
 }
 
+// function for baking a pie chart based on race
 // modified from https://gist.github.com/enjalot/1203641
 function pieBaker() {
     pieColor = d3.scale.category20c();     //builtin range of colors
- 
-    data = [{"label":"one", "value":20}, 
-            {"label":"two", "value":50}, 
-            {"label":"three", "value":30}];
 
     raceInfoBuffer = {};
     raceInfoBuffer["Black/African-American"] = parseInt(selectedSchoolObject["demographics"]["black_african_american_total"]);
@@ -364,20 +363,32 @@ function pieBaker() {
 	raceInfoBuffer["Multiracial"] = parseInt(selectedSchoolObject["demographics"]["two_plus_races_total"]);
 	raceInfoBuffer["International"] = parseInt(selectedSchoolObject["demographics"]["nonresident_alien_total"]);
 
-    var vis = d3.select("body")
-        .append("svg:svg")              //create the SVG element inside the <body>
-        .data([d3.entries(raceInfoBuffer)])                   //associate our data with the document
-            .attr("width", racePieVis.w)           //set the width and height of our visualization (these will be attributes of the <svg> tag
-            .attr("height", racePieVis.h)
-        .append("svg:g")                //make a group to hold our pie chart
-            .attr("transform", "translate(" + racePieVis.r + "," + racePieVis.r + ")")    //move the center of the pie chart from 0, 0 to radius, radius
+	// selects the canvas on which to bake the pie
+    var racePie = d3.select("#detailVis1")
+    	.select("svg");
+
+    // bakes the pie name
+    racePie.append("text")
+			.attr("class", "detailVisHeader")
+			.attr("x", racePieVis.x)
+			.attr("y", (racePieVis.y))
+			.text("Race Demographics");
+
+	// bakes the pie data
+    var vis = racePie
+        .append("g")                //make a group to hold our pie chart
+            .attr("transform", "translate(" + (racePieVis.x + racePieVis.r) + "," + (racePieVis.y + racePieVis.r + 10) + ")")    //move the center of the pie chart from 0, 0 to radius, radius
+        .data([d3.entries(raceInfoBuffer)]);
  
+ 	// bakes pie slice data
     var arc = d3.svg.arc()              //this will create <path> elements for us using arc data
         .outerRadius(racePieVis.r);
- 
+
+    // bakes pie slice data for a list of values
     var pie = d3.layout.pie()           //this will create arc data for us given a list of values
         .value(function(d) { return d.value; });    //we must tell it out to access the value of each element in our data array
  
+ 	// bakes pie slices
     var arcs = vis.selectAll("g.slice")     //this selects all <g> elements with class slice (there aren't any yet)
         .data(pie)                          //associate the generated pie data (an array of arcs, each having startAngle, endAngle and value properties) 
         .enter()                            //this will create <g> elements for every "extra" data element that should be associated with a selection. The result is creating a <g> for every object in the data array
@@ -401,8 +412,7 @@ function pieBaker() {
             	entries = d3.entries(raceInfoBuffer);
             	return entries[i]["key"]; 
             });        //get the label from our original data array
+
+    // TODO: make descriptive text append to a neatly sorted area
+    // TODO: make descriptive text append with boxes for the correct color
 }
-
-
-
-
