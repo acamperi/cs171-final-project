@@ -56,7 +56,7 @@ var zoom = d3.behavior.zoom()
     .on("zoom", move);
 
 // for tooltip functionality
-var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip hidden");
+var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip");
 
 // for state-based zoom functionality
 var centered;
@@ -106,9 +106,36 @@ var toggleSelected = function(id) {
 var loadStateData = function() {
 	// temporary dummy data tester
 	d3.json("../data/dummy_data.json", function(error, data) {
-		dummy_data = data;
+		
 
-		selectedSchool = 1;
+	var projections = [];
+	var schoolIDList = [];
+	for (var schoolID in data)
+	{
+		schoolIDList.push(schoolID);
+		projections.push(projection(data[schoolID]["lonlat"]));
+	}
+
+    dummy_data = data;
+
+	mainVisFrame.append("g").selectAll(".school").data(schoolIDList).enter().append("circle")
+    .classed("school", true)
+    .attr("r", function(x) { return 2; })
+    .attr("cx", function(_, i) {return projections[i][0];})
+    .attr("cy", function(_, i) {return projections[i][1];})
+    .on("mouseover", function(x){return tooltip.style("visibility", "visible").text(function(){
+    	return data[x]["name"];
+ });})
+	.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+	.on("mouseout", function(){return tooltip.style("visibility", "hidden");})
+	.on("click", function(x){
+		selectedSchool = x;
+		selectedSchoolObject = data[x];
+
+		detailify();
+	});
+
+		selectedSchool = schoolIDList[0];
 		selectedSchoolObject = dummy_data[selectedSchool];
 
 		console.log(selectedSchoolObject);

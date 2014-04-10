@@ -103,6 +103,14 @@ td {
 	fill: #FFFFFF;
 }
 
+.tooltip {
+	background-color : black;
+	color : white;
+	position : absolute;
+	z-index : 10;
+	visibility : hidden;
+}
+
 /* styles used for all bar graphs */
 .bar {
 	fill: #CC3333;
