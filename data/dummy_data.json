@@ -6,7 +6,7 @@
 		"city":"Cambridge",
 		"state":"MA",
 		"zip":"02138",
-		"lonlat": [ "42.3707202", "-71.1186401" ],
+		"lonlat": [ -71.1186401, 42.3707202 ],
 		"sector_id":"0",
 		"sector":"0",
 		"endowment_assets":"5000000000",
