@@ -416,3 +416,7 @@ function pieBaker() {
     // TODO: make descriptive text append to a neatly sorted area
     // TODO: make descriptive text append with boxes for the correct color
 }
+
+function financify() {
+	
+}
