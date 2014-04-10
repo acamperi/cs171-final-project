@@ -1,0 +1,14 @@
+{
+	"1": {
+		"name":"Harvard University",
+		"branch":"Main Campus",
+		"address":"Smith Campus Center 1350 Massachusetts Avenue",
+		"city":"Cambridge",
+		"state":"MA",
+		"zip":"02138",
+		"lonlat": [ "42.3707202", "-71.1186401" ],
+		"sector_id":"0",
+		"sector":"0",
+		"endowment_assets":"5000000000"
+	}
+}

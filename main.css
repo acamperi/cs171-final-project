@@ -10,6 +10,7 @@ body {
 	font-family: sans-serif;
 }
 
+/* Used for the main header*/
 h1 {
 	font-family: 'Exo', sans-serif;
 	font-weight: 700;
@@ -17,6 +18,17 @@ h1 {
 	color: #FFFFFF;
 	line-height: 10pt;
 	font-size: 30pt;
+}
+
+/* Used for each section header */
+h2 {
+	font-family: 'Exo', sans-serif;
+	font-weight: 700;
+	text-align: left;
+	color: #FFFFFF;
+	line-height: 10pt;
+	font-size: 20pt;
+	-webkit-margin-after: 10pt;
 }
 
 h4 {
@@ -39,27 +51,70 @@ sup {
 	opacity: 0.5;
 }
 
-.detailVis {
-	border: 1px dashed gray;
+table {
+	border-spacing: 0px 2px;
+}
+th {
+	font-family: 'Roboto Slab', serif;
+	background-color: #444444;
+	text-align: right;
+	padding: 4px;
+}
+td {
+	font-family: 'Exo', sans-serif;
+	background-color: #666666;
+	text-align: left;
+	padding: 4px;
 }
 
+/* styles used for the header */
+#headerArea {
+	padding-top: 30px;
+}
+
+/* styles used for the map*/
 .state {
 	stroke-width: 1px;
 	fill: #444444;
 	stroke: #666666;
 }
-
-.bar {
-	fill: #CC3333;
-	stroke: #AA0000;
-}
-
 .school {
 	stroke-width: 1px;
 	fill: #CCCCCC;
 	stroke: #FFFFFF;
 }
 
-#headerArea {
-	padding-top: 30px;
+/* styles used for all detailVis */
+.detailVis {
+	border: 1px dashed gray;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+.detailVisHeader {
+	font-family: 'Exo', serif;
+	font-size: 14pt;
+	font-weight: 700;
+	fill: #FFFFFF;
+}
+.detailVisDetailText {
+	font-family: 'Roboto Slab', serif;
+	font-size: 10pt;
+	font-weight: 400;
+	fill: #FFFFFF;
+}
+
+/* styles used for all bar graphs */
+.bar {
+	fill: #CC3333;
+}
+
+/* styles used for the genderBar visualization*/
+.maleBar {
+	fill: #333333;
+}
+.femaleBar {
+	fill: #777777;
+}
+.otherBar {
+	fill: #CCCCCC;
 }

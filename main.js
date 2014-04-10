@@ -30,17 +30,35 @@ var bbDetailVis = {
 	h: 600 - detailVisMargin.top - detailVisMargin.bottom
 };
 
+var genderBarVis = {
+	x: 0,
+	y: 30,
+	w: 300,
+	h: 100,
+	barheight: 30
+};
+
 // ===============================
 //   SETUP FUNCTIONS & VARIABLES
 // ===============================
 
+// for zoom functionality
 var zoom = d3.behavior.zoom()
     .scaleExtent([1, 10])
     .on("zoom", move);
 
+// for tooltip functionality
 var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip hidden");
 
+// for state-based zoom functionality
 var centered;
+
+// for when a school has been selected or not
+var selectedSchool = null;
+var selectedSchoolObject = null;
+
+// for dummy testing
+var dummy_data = {};
 
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
@@ -78,6 +96,18 @@ var toggleSelected = function(id) {
 };
 
 var loadStateData = function() {
+	// temporary dummy data tester
+	d3.json("../data/dummy_data.json", function(error, data) {
+		dummy_data = data;
+
+		selectedSchool = 1;
+		selectedSchoolObject = dummy_data[selectedSchool];
+
+		console.log(selectedSchoolObject);
+
+		detailify();
+	});
+
 	d3.json("../data/institutionsData101112.json", function(error, data) {
 		// load in state data, prepare scales etc
 
@@ -189,8 +219,126 @@ function clicked(d) {
 
 // TBD...
 
-// ========================
-//   LAUNCH VISUALIZATION
-// ========================
+// =============================
+//   LAUNCH MAIN VISUALIZATION
+// =============================
 
 loadMap();
+
+// ===============================
+//   LAUNCH DETAIL VISUALIZATION
+// ===============================
+
+// function that generates all the detail visualizations
+function detailify() {
+	tablify();
+	genderize();
+}
+
+// function for creating an info table
+function tablify() {
+	if (selectedSchoolObject != null) {
+		// collecting only pertinent data from the selectedSchoolObject
+		schoolName = selectedSchoolObject["name"];
+		// schoolBranch = selectedSchoolObject["branch"];
+		schoolInfoBuffer = {};
+		schoolInfoBuffer["Address"] = selectedSchoolObject["address"];
+		schoolInfoBuffer["City"] = selectedSchoolObject["city"];
+		schoolInfoBuffer["State"] = selectedSchoolObject["state"];
+		schoolInfoBuffer["Zip Code"] = selectedSchoolObject["zip"];
+		schoolInfoBuffer["Total Assets"] = selectedSchoolObject["endowment_assets"];
+
+		// adds school name
+		var name = d3.select("#detailVis1")
+			.insert("h2", "svg")
+			.text(schoolName);
+
+		// sets up the table based on schoolInfoBuffer
+		var table = d3.select("#detailVis1")
+			.insert("table", "svg");
+		var tbody = table.append("tbody");
+		var rows = tbody.selectAll("tr")
+			.data(d3.entries(schoolInfoBuffer)) // d3.entries converts objects into entries with key:key value:value parameters
+			.enter()
+			.append("tr");
+
+		// adds left-side table headers
+		rows.append("th")
+			.text(function(d){
+				return d.key;
+			});
+
+		// adds values
+		rows.append("td")
+			.text(function(d){
+				return d.value;
+			});
+	}
+}
+
+function genderize() {
+
+	var genderScale = d3.scale.linear().domain([0, 1]).range([0, genderBarVis.w]);
+
+	if (selectedSchoolObject != null) {
+		var males = parseInt(selectedSchoolObject["demographics"]["total_men"]);
+		var females = parseInt(selectedSchoolObject["demographics"]["total_women"]);
+		var total = parseInt(selectedSchoolObject["demographics"]["total"]);
+
+		var mPercent = males/total;
+		var fPercent = females/total;
+		var oPercent = (total-(males+females))/total;
+
+		console.log(mPercent);
+
+		var genderBars = d3.select("#detailVis1")
+			.selectAll("svg");
+
+		genderBars.append("text")
+			.attr("class", "detailVisHeader")
+			.attr("x", 0)
+			.attr("y", 20)
+			.attr("anchor", "top")
+			.text("Gender");
+
+		var maleBar = genderBars.append("rect")
+			.attr("x", genderBarVis.x)
+			.attr("y", genderBarVis.y)
+			.attr("height", genderBarVis.barheight)
+			.attr("width", genderScale(mPercent))
+			.classed("maleBar", true);
+
+		var femaleBar = genderBars.append("rect")
+			.attr("x", genderBarVis.x + genderScale(mPercent))
+			.attr("y", genderBarVis.y)
+			.attr("height", genderBarVis.barheight)
+			.attr("width", genderScale(fPercent))
+			.classed("femaleBar", true);
+
+		var otherBar = genderBars.append("rect")
+			.attr("x", genderBarVis.x + genderScale(mPercent) + genderScale(fPercent))
+			.attr("y", genderBarVis.y)
+			.attr("height", genderBarVis.barheight)
+			.attr("width", genderScale(oPercent))
+			.classed("otherBar", true);
+
+		var maleText = genderBars.append("text")
+			.attr("x", genderBarVis.x)
+			.attr("y", genderBarVis.y + genderBarVis.barheight + 20)
+			.attr("text-anchor", "start")
+			.attr("class", "detailVisDetailText")
+			.text(100 * mPercent.toFixed(4) + "% Male");
+
+		var maleText = genderBars.append("text")
+			.attr("x", genderBarVis.x + genderBarVis.w)
+			.attr("y", genderBarVis.y + genderBarVis.barheight + 20)
+			.attr("text-anchor", "end")
+			.attr("class", "detailVisDetailText")
+			.text(100 * fPercent.toFixed(4) + "% Female");
+	}
+}
+
+
+
+
+
