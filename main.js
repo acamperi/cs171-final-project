@@ -38,6 +38,12 @@ var genderBarVis = {
 	barheight: 30
 };
 
+var racePieVis = {
+	w: 300,		//width
+	h: 300,		//height
+	r: 100		//radius
+}       
+
 // ===============================
 //   SETUP FUNCTIONS & VARIABLES
 // ===============================
@@ -233,6 +239,7 @@ loadMap();
 function detailify() {
 	tablify();
 	genderize();
+	pieBaker();
 }
 
 // function for creating an info table
@@ -276,6 +283,7 @@ function tablify() {
 	}
 }
 
+// function for making the gender proportion bars
 function genderize() {
 
 	var genderScale = d3.scale.linear().domain([0, 1]).range([0, genderBarVis.w]);
@@ -329,7 +337,7 @@ function genderize() {
 			.attr("class", "detailVisDetailText")
 			.text(100 * mPercent.toFixed(4) + "% Male");
 
-		var maleText = genderBars.append("text")
+		var femaleText = genderBars.append("text")
 			.attr("x", genderBarVis.x + genderBarVis.w)
 			.attr("y", genderBarVis.y + genderBarVis.barheight + 20)
 			.attr("text-anchor", "end")
@@ -338,6 +346,62 @@ function genderize() {
 	}
 }
 
+// modified from https://gist.github.com/enjalot/1203641
+function pieBaker() {
+    pieColor = d3.scale.category20c();     //builtin range of colors
+ 
+    data = [{"label":"one", "value":20}, 
+            {"label":"two", "value":50}, 
+            {"label":"three", "value":30}];
+
+    raceInfoBuffer = {};
+    raceInfoBuffer["Black/African-American"] = parseInt(selectedSchoolObject["demographics"]["black_african_american_total"]);
+    raceInfoBuffer["Asian"] = parseInt(selectedSchoolObject["demographics"]["asian_total"]);
+    raceInfoBuffer["White"] = parseInt(selectedSchoolObject["demographics"]["white_total"]);
+    raceInfoBuffer["Hispanic/Latinx"] = parseInt(selectedSchoolObject["demographics"]["hispanic_latino_total"]);
+    raceInfoBuffer["Native Hawaiian/Other Pacific Islander"] = parseInt(selectedSchoolObject["demographics"]["native_hawaiian_other_pacific_islander_total"]);
+	raceInfoBuffer["American Indian/Alaska Native"] = parseInt(selectedSchoolObject["demographics"]["american_indian_alaska_native_total"]);
+	raceInfoBuffer["Multiracial"] = parseInt(selectedSchoolObject["demographics"]["two_plus_races_total"]);
+	raceInfoBuffer["International"] = parseInt(selectedSchoolObject["demographics"]["nonresident_alien_total"]);
+
+    var vis = d3.select("body")
+        .append("svg:svg")              //create the SVG element inside the <body>
+        .data([d3.entries(raceInfoBuffer)])                   //associate our data with the document
+            .attr("width", racePieVis.w)           //set the width and height of our visualization (these will be attributes of the <svg> tag
+            .attr("height", racePieVis.h)
+        .append("svg:g")                //make a group to hold our pie chart
+            .attr("transform", "translate(" + racePieVis.r + "," + racePieVis.r + ")")    //move the center of the pie chart from 0, 0 to radius, radius
+ 
+    var arc = d3.svg.arc()              //this will create <path> elements for us using arc data
+        .outerRadius(racePieVis.r);
+ 
+    var pie = d3.layout.pie()           //this will create arc data for us given a list of values
+        .value(function(d) { return d.value; });    //we must tell it out to access the value of each element in our data array
+ 
+    var arcs = vis.selectAll("g.slice")     //this selects all <g> elements with class slice (there aren't any yet)
+        .data(pie)                          //associate the generated pie data (an array of arcs, each having startAngle, endAngle and value properties) 
+        .enter()                            //this will create <g> elements for every "extra" data element that should be associated with a selection. The result is creating a <g> for every object in the data array
+            .append("svg:g")                //create a group to hold each slice (we will have a <path> and a <text> element associated with each slice)
+                .attr("class", "slice");    //allow us to style things in the slices (like text)
+ 
+        arcs.append("svg:path")
+                .attr("fill", function(d, i) { return pieColor(i); } ) //set the color for each slice to be chosen from the color function defined above
+                .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
+ 
+        arcs.append("svg:text")                                     //add a label to each slice
+                .attr("transform", function(d) {                    //set the label's origin to the center of the arc
+                //we have to make sure to set these before calling arc.centroid
+                d.innerRadius = 0;
+                d.outerRadius = racePieVis.r;
+                return "translate(" + arc.centroid(d) + ")";        //this gives us a pair of coordinates like [50, 50]
+            })
+            .attr("text-anchor", "middle")                          //center the text on it's origin
+            .attr("class", "pieText")
+            .text(function(d, i) { 
+            	entries = d3.entries(raceInfoBuffer);
+            	return entries[i]["key"]; 
+            });        //get the label from our original data array
+}
 
 
 

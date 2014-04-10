@@ -118,3 +118,7 @@ td {
 .otherBar {
 	fill: #CCCCCC;
 }
+
+.pieText {
+	font-size: 10%;
+}
