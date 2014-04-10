@@ -33,7 +33,7 @@ var bbDetailVis = {
 var genderBarVis = {
 	x: 0,
 	y: 50,
-	w: 300,
+	w: 200,
 	h: 100,
 	barheight: 30
 };
@@ -44,7 +44,14 @@ var racePieVis = {
 	w: 300,		//width
 	h: 300,		//height
 	r: 100		//radius
-}       
+}
+
+var financialAidBarVis = {
+	x: genderBarVis.x + genderBarVis.w + 50,
+	y: genderBarVis.y,
+	w: 300,
+	h: 300
+}
 
 // ===============================
 //   SETUP FUNCTIONS & VARIABLES
@@ -243,6 +250,7 @@ function detailify() {
 	tablify();
 	genderize();
 	pieBaker();
+	financify();
 }
 
 // function for creating an info table
@@ -257,6 +265,7 @@ function tablify() {
 		schoolInfoBuffer["State"] = selectedSchoolObject["state"];
 		schoolInfoBuffer["Zip Code"] = selectedSchoolObject["zip"];
 		schoolInfoBuffer["Total Assets"] = selectedSchoolObject["endowment_assets"];
+		schoolInfoBuffer["Enrollment"] = selectedSchoolObject["demographics"]["total"];
 
 		// adds school name
 		var name = d3.select("#detailVis1")
@@ -371,7 +380,7 @@ function pieBaker() {
     racePie.append("text")
 			.attr("class", "detailVisHeader")
 			.attr("x", racePieVis.x)
-			.attr("y", (racePieVis.y))
+			.attr("y", racePieVis.y)
 			.text("Race Demographics");
 
 	// bakes the pie data
@@ -396,8 +405,8 @@ function pieBaker() {
                 .attr("class", "slice");    //allow us to style things in the slices (like text)
  
         arcs.append("svg:path")
-                .attr("fill", function(d, i) { return pieColor(i); } ) //set the color for each slice to be chosen from the color function defined above
-                .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
+            .attr("fill", function(d, i) { return pieColor(i); } ) //set the color for each slice to be chosen from the color function defined above
+            .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
  
         arcs.append("svg:text")                                     //add a label to each slice
                 .attr("transform", function(d) {                    //set the label's origin to the center of the arc
@@ -418,5 +427,33 @@ function pieBaker() {
 }
 
 function financify() {
-	
+	// pulls financial aid info
+	financeInfoBuffer = {};
+	financeInfoBuffer["Average"] = parseInt(selectedSchoolObject["finaid"]["average"]);
+	financeInfoBuffer["$0-$30000"] = parseInt(selectedSchoolObject["finaid"]["income_0_30000"]);
+	financeInfoBuffer["$30000-$48000"] = parseInt(selectedSchoolObject["finaid"]["income_30001_48000"]);
+	financeInfoBuffer["$48000-$75000"] = parseInt(selectedSchoolObject["finaid"]["income_48001_75000"]);
+	financeInfoBuffer["$75000-110000"] = parseInt(selectedSchoolObject["finaid"]["income_75001_110000"]);
+	financeInfoBuffer["$110000+"] = parseInt(selectedSchoolObject["finaid"]["income_110001_more"]);
+
+	financeInfo = d3.entries(financeInfoBuffer);
+
+	// selects the canvas on which to bake the pie
+    var financialAidBars = d3.select("#detailVis1")
+    	.select("svg");
+
+    // bakes the pie name
+    financialAidBars.append("text")
+			.attr("class", "detailVisHeader")
+			.attr("x", financialAidBarVis.x)
+			.attr("y", (financialAidBarVis.y - 10))
+			.text("Financial Aid");
+
+	financialAidBars.selectAll(".bar")
+        .data(financeInfo)
+        .enter()
+        .append("rect")
+        .transition()
+        .duration(1000)
+        .delay(function(d, i) { return i * 20; });
 }
