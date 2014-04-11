@@ -46,6 +46,8 @@ var racePieVis = {
 	r: 100		//radius
 }       
 
+var school_dot_radius = 2;
+
 // ===============================
 //   SETUP FUNCTIONS & VARIABLES
 // ===============================
@@ -120,7 +122,7 @@ var loadStateData = function() {
 
 	mainVisFrame.append("g").selectAll(".school").data(schoolIDList).enter().append("circle")
     .classed("school", true)
-    .attr("r", function(x) { return 2; })
+    .attr("r", function(x) { return school_dot_radius; })
     .attr("cx", function(_, i) {return projections[i][0];})
     .attr("cy", function(_, i) {return projections[i][1];})
     .on("mouseover", function(x){return tooltip.style("visibility", "visible").text(function(){
@@ -193,8 +195,10 @@ var loadMap = function() {
 
 // click & drag functionality, from http://techslides.com/demos/d3/worldmap-template.html
 function move() {
+
 	var t = d3.event.translate;
 	var s = d3.event.scale; 
+	console.log(t + " :::::::: " + s);
 	zscale = s;
 	var h = bbMainVis.h/4;
 
@@ -212,6 +216,7 @@ function move() {
 
 	//adjust the state hover stroke width based on zoom level
 	d3.selectAll(".state").style("stroke-width", 1 / s);
+	d3.selectAll(".school").attr("r", school_dot_radius / s);
 }
 
 //geo translation on mouse click in map
@@ -247,6 +252,7 @@ function clicked(d) {
       	.attr("transform", "translate(" + bbMainVis.w / 2 + "," + bbMainVis.h / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
   
   	d3.selectAll(".state").transition().duration(750).style("stroke-width", 1 / k);
+  	d3.selectAll(".school").transition().duration(750).attr("r", school_dot_radius / k);
 }
 
 // ===============================
