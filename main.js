@@ -59,6 +59,19 @@ var financialAidBarVis = {
 	barWidth: 30
 }
 
+var crimeBarVis = {
+	yAxisW: 20,
+	x: genderBarVis.x + 50,
+	chartX: genderBarVis.x + 50,
+	y: genderBarVis.y,
+	chartY: 10 + genderBarVis.y,
+	w: 400,
+	h: 300,
+	xAxisY: 10 + genderBarVis.y + 300,
+	xAxisH: 30,
+	barWidth: 30
+}
+
 var school_dot_radius = 2;
 
 // ===============================
@@ -315,6 +328,7 @@ function detailify() {
 	genderize();
 	pieBaker();
 	financify();
+	crimeify();
 	detailified = true;
 }
 
@@ -581,3 +595,100 @@ function financify() {
         .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
         .call(fBYAxis);
 }
+
+
+function crimeify() {
+
+	crimeInfoBuffer = {};
+	crimeInfoBuffer["total"] = parseInt(selectedSchoolObject["crime"]["total"]);
+	crimeInfoBuffer["murder"] = parseInt(selectedSchoolObject["crime"]["murder"]);
+	crimeInfoBuffer["negligent manslaughter"] = parseInt(selectedSchoolObject["crime"]["negligent_manslaughter"]);
+	crimeInfoBuffer["forcible sex offense"] = parseInt(selectedSchoolObject["crime"]["forcible_sex_offense"]);
+	crimeInfoBuffer["nonforcible sex offense"] = parseInt(selectedSchoolObject["crime"]["nonforcible_sex_offense"]);
+	crimeInfoBuffer["robbery"] = parseInt(selectedSchoolObject["crime"]["robbery"]);
+	crimeInfoBuffer["aggravated assault"] = parseInt(selectedSchoolObject["crime"]["aggravated_assault"]);
+	crimeInfoBuffer["burglary"] = parseInt(selectedSchoolObject["crime"]["burglary"]);
+	crimeInfoBuffer["motor vehicle theft"] = parseInt(selectedSchoolObject["crime"]["motor_vehicle_theft"]);
+	crimeInfoBuffer["arson"] = parseInt(selectedSchoolObject["crime"]["arson"]);
+
+	crimeInfo = d3.entries(crimeInfoBuffer);
+	crimeInfoKeys = d3.keys(crimeInfoBuffer);
+
+	console.log(crimeInfo);
+
+	xScale = d3.scale.ordinal()
+		.domain(crimeInfoKeys)
+		.rangePoints([0, crimeBarVis.w]);  // define the right domain generically
+    yScale = d3.scale.linear()
+    	.domain([0, d3.max(crimeInfo, function(d){
+    		return d.value;
+   		})])
+   		.range([0, crimeBarVis.h]);
+   	inverseYScale = d3.scale.linear()
+    	.domain([0, d3.max(crimeInfo, function(d){
+    		return d.value;
+   		})])
+   		.range([crimeBarVis.h, 0]);
+
+	var cBXAxis = d3.svg.axis()
+      .scale(xScale)
+      .orient("bottom");
+
+    var cBYAxis = d3.svg.axis()
+      .scale(inverseYScale)
+      .orient("left");
+
+	// selects the canvas on which to make the visualization
+    var crimeBars = d3.select("#detailVis2")
+    	.select("svg");
+
+    // makes the title
+    crimeBars.append("text")
+		.attr("class", "detailVisHeader")
+		.attr("x", crimeBarVis.x)
+		.attr("y", (crimeBarVis.y - 10))
+		.text("University Crime");
+
+	// makes the bars
+	crimeBars.selectAll(".bar")
+        .data(crimeInfo)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d, i) { 
+        	return crimeBarVis.barWidth/2 + crimeBarVis.chartX + xScale(d.key);
+        })
+        .attr("y", function(d) {
+        	return crimeBarVis.chartY + (crimeBarVis.h - yScale(d.value));
+        })
+        .attr("width", function(d, i) {
+        	return crimeBarVis.barWidth;
+        })
+        .attr("height", function(d) {
+        	return yScale(d.value);
+        })
+        .attr("title", function(d) {
+        	return d.key;
+        });
+
+    crimeBars.append("g")
+        .attr("class", "axis")
+        .attr("id", "crimeXAxis")
+        .attr("transform", "translate(" + (crimeBarVis.chartX + crimeBarVis.barWidth) + "," + crimeBarVis.xAxisY +")")
+        .call(cBXAxis)
+      	// modified from http://www.d3noob.org/2013/01/how-to-rotate-text-labels-for-x-axis-of.html
+        	.selectAll("text")  
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                return "rotate(-65)" 
+                });
+
+    crimeBars.append("g")
+        .attr("class", "axis")
+        .attr("id", "crimeYAxis")
+        .attr("transform", "translate(" + crimeBarVis.chartX + "," + crimeBarVis.chartY +")")
+        .call(cBYAxis);
+}
+
