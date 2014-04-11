@@ -363,6 +363,7 @@
 
 			var num_institutions = _.keys(institutionsData).length, times_queried_maps_api = 0;
 			var geocoder = new google.maps.Geocoder();
+			var index = 0;
 			_.each(institutionsData, function(institution) {
 				if (institution.endowment_num_data > 1)
 					institution.endowment_assets /= institution.endowment_num_data;
@@ -397,13 +398,17 @@
 					}
 				}
 
-				var address = institution.address + ", " + institution.city + ", " + institution.state + institution.zip;
-				geocoder.geocode({address: address}, function(results, status) {
-					if (status == google.maps.GeocoderStatus.OK)
-						institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
-					console.log("got response from google maps");
-					times_queried_maps_api += 1;
-				});
+				setTimeout(function() {
+					var address = institution.address + ", " + institution.city + ", " + institution.state + institution.zip;
+					geocoder.geocode({address: address}, function(results, status) {
+						if (status == google.maps.GeocoderStatus.OK)
+							institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
+						console.log("got response from google maps");
+						times_queried_maps_api += 1;
+					});
+				}, index * 50);
+
+				index++;
 			});
 
 			setTimeout(function() {
@@ -414,7 +419,7 @@
 				saveToFile(institutionsData, "institutionsData101112.json");
 
 				var statesData = [];
-			}, 30000);
+			}, 600000);
 			
 		});
 
