@@ -143,6 +143,8 @@ var loadStateData = function() {
 				schoolIDList.push(schoolID);
 				projections.push(computed_projection);
 			}
+			else
+				c++;
 		}
 		console.log(c);
 
