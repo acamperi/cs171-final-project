@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>College Campus Security Data Processing</title>
+</head>
+<body>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://d3js.org/queue.v1.min.js"></script>
+	<script src="http://d3js.org/topojson.v1.min.js"></script>
+	<script src="http://underscorejs.org/underscore-min.js"></script>
+	<script src="libs/jquery-1.11.0.min.js"></script>
+	<script src="libs/FileSaver.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAINlEx2X4DelZtE8xArwot4qyuK6A8DFA&sensor=false"></script>
+
+	<script>
+
+		var q = queue();
+		var files = [
+			// "raw/noncampusarrest101112.csv",
+			// "raw/oncampusarrest101112.csv",
+			// "raw/Publicpropertyarrest101112.csv",
+			// "raw/Residencehallarrest101112.csv",
+			"raw/noncampuscrime101112.csv",
+			"raw/oncampuscrime101112.csv",
+			"raw/Publicpropertycrime101112.csv",
+			"raw/Residencehallcrime101112.csv",
+			// "raw/noncampusdiscipline101112.csv",
+			// "raw/oncampusdiscipline101112.csv",
+			// "raw/Publicpropertydiscipline101112.csv",
+			// "raw/Residencehalldiscipline101112.csv",
+			// "raw/noncampushate101112.csv",
+			// "raw/oncampushate101112.csv",
+			// "raw/Publicpropertyhate101112.csv",
+			// "raw/Residencehallhate101112.csv",
+			"raw/effy2010_rv.csv",
+			"raw/effy2011_rv.csv",
+			"raw/effy2012.csv",
+			"raw/sfa0910_rv.csv",
+			"raw/sfa1011_rv.csv",
+			"raw/sfa1112.csv",
+			"raw/ic2010_ay_rv.csv",
+			"raw/ic2011_ay_rv.csv",
+			"raw/ic2012_ay.csv",
+			"raw/finance2010.csv",
+			"raw/finance2011.csv",
+			"raw/finance2012.csv"
+		];
+		_.each(files, function(f) { q.defer(d3.csv, f); });
+		q.await(function(error,
+				// nonCampusArrest, onCampusArrest, publicPropertyArrest, residenceHallArrest,
+				nonCampusCrime, onCampusCrime, publicPropertyCrime, residenceHallCrime,
+				// nonCampusDiscipline, onCampusDiscipline, publicPropertyDiscipline, residenceHallDiscipline,
+				// nonCampusHate, onCampusHate, publicPropertyHate, residenceHallHate,
+				demographics2010, demographics2011, demographics2012,
+				finaid2010, finaid2011, finaid2012,
+				tuition2010, tuition2011, tuition2012,
+				finance2010, finance2011, finance2012
+			) {
+
+			var institutionsData = {};
+
+			var parseCellToInt = function(cell) {
+				var parsed = parseInt(cell.trim());
+				return isNaN(parsed) ? 0 : parsed;
+			};
+
+			_.each(nonCampusCrime, function(row) {
+				var id = row["UNITID_P"].slice(0, -3);
+				if (institutionsData[id] === undefined) {
+					institutionsData[id] = {
+						id: id,
+						name: row["INSTNM"],
+						branch: row["BRANCH"],
+						address: row["Address"],
+						city: row["City"],
+						state: row["State"],
+						zip: row["ZIP"],
+						lonlat: [],
+						sector_id: row["sector_cd"],
+						sector: row["Sector_desc"],
+						endowment_assets: 0,
+						endowment_num_data: 0,
+						crime: {
+							num_data: 0,
+							total: 0,
+							murder: 0,
+							negligent_manslaughter: 0,
+							forcible_sex_offense: 0,
+							nonforcible_sex_offense: 0,
+							robbery: 0,
+							aggravated_assault: 0,
+							burglary: 0,
+							motor_vehicle_theft: 0,
+							arson: 0
+						},
+						demographics: {
+							num_data: 0,
+							total: 0, total_men: 0, total_women: 0,
+							american_indian_alaska_native_total: 0, american_indian_alaska_native_men: 0, american_indian_alaska_native_women: 0,
+							asian_total: 0, asian_men: 0, asian_women: 0,
+							black_african_american_total: 0, black_african_american_men: 0, black_african_american_women: 0,
+							hispanic_latino_total: 0, hispanic_latino_men: 0, hispanic_latino_women: 0,
+							native_hawaiian_other_pacific_islander_total: 0, native_hawaiian_other_pacific_islander_men: 0, native_hawaiian_other_pacific_islander_women: 0,
+							white_total: 0, white_men: 0, white_women: 0,
+							two_plus_races_total: 0, two_plus_races_men: 0, two_plus_races_women: 0,
+							unknown_total: 0, unknown_men: 0, unknown_women: 0,
+							nonresident_alien_total: 0, nonresident_alien_men: 0, nonresident_alien_women: 0
+						},
+						finaid: {
+							num_data: 0,
+							average: 0,
+							income_0_30000: 0,
+							income_30001_48000: 0,
+							income_48001_75000: 0,
+							income_75001_110000: 0,
+							income_110001_more: 0
+						},
+						tuition: {
+							num_data: 0,
+							average: 0, in_state: 0, out_of_state: 0,
+							undergrad: {
+								average: 0, in_state: 0, out_of_state: 0
+							},
+							grad: {
+								average: 0, in_state: 0, out_of_state: 0
+							}
+						}
+					};
+
+					_.each(["non_campus", "on_campus", "public_property", "residence_hall"], function(type) {
+						institutionsData[id].crime[type] = {
+							num_data: 0,
+							total: 0,
+							murder: 0,
+							negligent_manslaughter: 0,
+							forcible_sex_offense: 0,
+							nonforcible_sex_offense: 0,
+							robbery: 0,
+							aggravated_assault: 0,
+							burglary: 0,
+							motor_vehicle_theft: 0,
+							arson: 0
+						};
+					});
+
+					_.each(["undergrad", "grad"], function(level) {
+						institutionsData[id].demographics[level] = {
+							num_data: 0,
+							total: 0, total_men: 0, total_women: 0,
+							american_indian_alaska_native_total: 0, american_indian_alaska_native_men: 0, american_indian_alaska_native_women: 0,
+							asian_total: 0, asian_men: 0, asian_women: 0,
+							black_african_american_total: 0, black_african_american_men: 0, black_african_american_women: 0,
+							hispanic_latino_total: 0, hispanic_latino_men: 0, hispanic_latino_women: 0,
+							native_hawaiian_other_pacific_islander_total: 0, native_hawaiian_other_pacific_islander_men: 0, native_hawaiian_other_pacific_islander_women: 0,
+							white_total: 0, white_men: 0, white_women: 0,
+							two_plus_races_total: 0, two_plus_races_men: 0, two_plus_races_women: 0,
+							unknown_total: 0, unknown_men: 0, unknown_women: 0,
+							nonresident_alien_total: 0, nonresident_alien_men: 0, nonresident_alien_women: 0
+						};
+					});
+				}
+			});
+
+			console.log("finished creating institution objects, starting crime data importing");
+
+			var crime_iterators = [
+				[nonCampusCrime, "non_campus"],
+				[onCampusCrime, "on_campus"],
+				[publicPropertyCrime, "public_property"],
+				[residenceHallCrime, "residence_hall"]
+			];
+			_.each(crime_iterators, function(crime_set) {
+				_.each(crime_set[0], function(row) {
+					var murder = parseCellToInt(row["MURD10"]) + parseCellToInt(row["MURD11"]) + parseCellToInt(row["MURD12"]);
+					var negligent_manslaughter = parseCellToInt(row["NEG_M10"]) + parseCellToInt(row["NEG_M11"]) + parseCellToInt(row["NEG_M12"]);
+					var forcible_sex_offense = parseCellToInt(row["FORCIB10"]) + parseCellToInt(row["FORCIB11"]) + parseCellToInt(row["FORCIB12"]);
+					var nonforcible_sex_offense = parseCellToInt(row["NONFOR10"]) + parseCellToInt(row["NONFOR11"]) + parseCellToInt(row["NONFOR12"]);
+					var robbery = parseCellToInt(row["ROBBE10"]) + parseCellToInt(row["ROBBE11"]) + parseCellToInt(row["ROBBE12"]);
+					var aggravated_assault = parseCellToInt(row["AGG_A10"]) + parseCellToInt(row["AGG_A11"]) + parseCellToInt(row["AGG_A12"]);
+					var burglary = parseCellToInt(row["BURGLA10"]) + parseCellToInt(row["BURGLA11"]) + parseCellToInt(row["BURGLA12"]);
+					var motor_vehicle_theft = parseCellToInt(row["VEHIC10"]) + parseCellToInt(row["VEHIC11"]) + parseCellToInt(row["VEHIC12"]);
+					var arson = parseCellToInt(row["ARSON10"]) + parseCellToInt(row["ARSON11"]) + parseCellToInt(row["ARSON12"]);
+					
+					var total = murder + negligent_manslaughter + forcible_sex_offense + nonforcible_sex_offense + robbery + aggravated_assault + burglary + motor_vehicle_theft + arson;
+					var id = row["UNITID_P"].slice(0, -3);
+
+					institutionsData[id].crime.num_data += 1;
+					institutionsData[id].crime.total += total;
+					institutionsData[id].crime.murder += murder;
+					institutionsData[id].crime.negligent_manslaughter += negligent_manslaughter;
+					institutionsData[id].crime.forcible_sex_offense += forcible_sex_offense;
+					institutionsData[id].crime.nonforcible_sex_offense += nonforcible_sex_offense;
+					institutionsData[id].crime.robbery += robbery;
+					institutionsData[id].crime.aggravated_assault += aggravated_assault;
+					institutionsData[id].crime.burglary += burglary;
+					institutionsData[id].crime.motor_vehicle_theft += motor_vehicle_theft;
+					institutionsData[id].crime.arson += arson;
+
+					institutionsData[id].crime[crime_set[1]].num_data += 1;
+					institutionsData[id].crime[crime_set[1]].total += total;
+					institutionsData[id].crime[crime_set[1]].murder += murder;
+					institutionsData[id].crime[crime_set[1]].negligent_manslaughter += negligent_manslaughter;
+					institutionsData[id].crime[crime_set[1]].forcible_sex_offense += forcible_sex_offense;
+					institutionsData[id].crime[crime_set[1]].nonforcible_sex_offense += nonforcible_sex_offense;
+					institutionsData[id].crime[crime_set[1]].robbery += robbery;
+					institutionsData[id].crime[crime_set[1]].aggravated_assault += aggravated_assault;
+					institutionsData[id].crime[crime_set[1]].burglary += burglary;
+					institutionsData[id].crime[crime_set[1]].motor_vehicle_theft += motor_vehicle_theft;
+					institutionsData[id].crime[crime_set[1]].arson += arson;
+				});
+			});
+
+			console.log("finished importing crime data, starting demographics data importing")
+
+			_.each([demographics2010, demographics2011, demographics2012], function(demographics_set) {
+				_.each(demographics_set, function(row) {
+					var id = row["UNITID"];
+					if (institutionsData[id] !== undefined) {
+						var total = parseCellToInt(row["EFYTOTLT"]), total_men = parseCellToInt(row["EFYTOTLM"]), total_women = parseCellToInt(row["EFYTOTLW"]);
+						var american_indian_alaska_native_total = parseCellToInt(row["EFYAIANT"]), american_indian_alaska_native_men = parseCellToInt(row["EFYAIANM"]), american_indian_alaska_native_women = parseCellToInt(row["EFYAIANW"]);
+						var asian_total = parseCellToInt(row["EFYASIAT"]), asian_men = parseCellToInt(row["EFYASIAM"]), asian_women = parseCellToInt(row["EFYASIAW"]);
+						var black_african_american_total = parseCellToInt(row["EFYBKAAT"]), black_african_american_men = parseCellToInt(row["EFYBKAAM"]), black_african_american_women = parseCellToInt(row["EFYBKAAW"]);
+						var hispanic_latino_total = parseCellToInt(row["EFYHISPT"]), hispanic_latino_men = parseCellToInt(row["EFYHISPM"]), hispanic_latino_women = parseCellToInt(row["EFYHISPW"]);
+						var native_hawaiian_other_pacific_islander_total = parseCellToInt(row["EFYNHPIT"]), native_hawaiian_other_pacific_islander_men = parseCellToInt(row["EFYNHPIM"]), native_hawaiian_other_pacific_islander_women = parseCellToInt(row["EFYNHPIW"]);
+						var white_total = parseCellToInt(row["EFYWHITT"]), white_men = parseCellToInt(row["EFYWHITM"]), white_women = parseCellToInt(row["EFYWHITW"]);
+						var two_plus_races_total = parseCellToInt(row["EFY2MORT"]), two_plus_races_men = parseCellToInt(row["EFY2MORM"]), two_plus_races_women = parseCellToInt(row["EFY2MORW"]);
+						var unknown_total = parseCellToInt(row["EFYUNKNT"]), unknown_men = parseCellToInt(row["EFYUNKNM"]), unknown_women = parseCellToInt(row["EFYUNKNW"]);
+						var nonresident_alien_total = parseCellToInt(row["EFYNRALT"]), nonresident_alien_men = parseCellToInt(row["EFYNRALM"]), nonresident_alien_women = parseCellToInt(row["EFYNRALW"]);
+
+						var level = parseCellToInt(row["EFFYLEV"]);
+						if (level == 1) {
+							institutionsData[id].demographics.num_data += 1;
+							institutionsData[id].demographics.total += total;
+							institutionsData[id].demographics.total_men += total_men;
+							institutionsData[id].demographics.total_women += total_women;
+							institutionsData[id].demographics.american_indian_alaska_native_total += american_indian_alaska_native_total;
+							institutionsData[id].demographics.american_indian_alaska_native_men += american_indian_alaska_native_men;
+							institutionsData[id].demographics.american_indian_alaska_native_women += american_indian_alaska_native_women;
+							institutionsData[id].demographics.black_african_american_total += black_african_american_total;
+							institutionsData[id].demographics.black_african_american_men += black_african_american_men;
+							institutionsData[id].demographics.black_african_american_women += black_african_american_women;
+							institutionsData[id].demographics.hispanic_latino_total += hispanic_latino_total;
+							institutionsData[id].demographics.hispanic_latino_men += hispanic_latino_men;
+							institutionsData[id].demographics.hispanic_latino_women += hispanic_latino_women;
+							institutionsData[id].demographics.native_hawaiian_other_pacific_islander_total += native_hawaiian_other_pacific_islander_total;
+							institutionsData[id].demographics.native_hawaiian_other_pacific_islander_men += native_hawaiian_other_pacific_islander_men;
+							institutionsData[id].demographics.native_hawaiian_other_pacific_islander_women += native_hawaiian_other_pacific_islander_women;
+							institutionsData[id].demographics.white_total += white_total;
+							institutionsData[id].demographics.white_men += white_men;
+							institutionsData[id].demographics.white_women += white_women;
+							institutionsData[id].demographics.two_plus_races_total += two_plus_races_total;
+							institutionsData[id].demographics.two_plus_races_men += two_plus_races_men;
+							institutionsData[id].demographics.two_plus_races_women += two_plus_races_women;
+							institutionsData[id].demographics.unknown_total += unknown_total;
+							institutionsData[id].demographics.unknown_men += unknown_men;
+							institutionsData[id].demographics.unknown_women += unknown_women;
+							institutionsData[id].demographics.nonresident_alien_total += nonresident_alien_total;
+							institutionsData[id].demographics.nonresident_alien_men += nonresident_alien_men;
+							institutionsData[id].demographics.nonresident_alien_women += nonresident_alien_women;
+						} else {
+							var level_name = level == 2 ? "undergrad" : "grad";
+							institutionsData[id].demographics[level_name].num_data += 1;
+							institutionsData[id].demographics[level_name].total += total;
+							institutionsData[id].demographics[level_name].total_men += total_men;
+							institutionsData[id].demographics[level_name].total_women += total_women;
+							institutionsData[id].demographics[level_name].american_indian_alaska_native_total += american_indian_alaska_native_total;
+							institutionsData[id].demographics[level_name].american_indian_alaska_native_men += american_indian_alaska_native_men;
+							institutionsData[id].demographics[level_name].american_indian_alaska_native_women += american_indian_alaska_native_women;
+							institutionsData[id].demographics[level_name].black_african_american_total += black_african_american_total;
+							institutionsData[id].demographics[level_name].black_african_american_men += black_african_american_men;
+							institutionsData[id].demographics[level_name].black_african_american_women += black_african_american_women;
+							institutionsData[id].demographics[level_name].hispanic_latino_total += hispanic_latino_total;
+							institutionsData[id].demographics[level_name].hispanic_latino_men += hispanic_latino_men;
+							institutionsData[id].demographics[level_name].hispanic_latino_women += hispanic_latino_women;
+							institutionsData[id].demographics[level_name].native_hawaiian_other_pacific_islander_total += native_hawaiian_other_pacific_islander_total;
+							institutionsData[id].demographics[level_name].native_hawaiian_other_pacific_islander_men += native_hawaiian_other_pacific_islander_men;
+							institutionsData[id].demographics[level_name].native_hawaiian_other_pacific_islander_women += native_hawaiian_other_pacific_islander_women;
+							institutionsData[id].demographics[level_name].white_total += white_total;
+							institutionsData[id].demographics[level_name].white_men += white_men;
+							institutionsData[id].demographics[level_name].white_women += white_women;
+							institutionsData[id].demographics[level_name].two_plus_races_total += two_plus_races_total;
+							institutionsData[id].demographics[level_name].two_plus_races_men += two_plus_races_men;
+							institutionsData[id].demographics[level_name].two_plus_races_women += two_plus_races_women;
+							institutionsData[id].demographics[level_name].unknown_total += unknown_total;
+							institutionsData[id].demographics[level_name].unknown_men += unknown_men;
+							institutionsData[id].demographics[level_name].unknown_women += unknown_women;
+							institutionsData[id].demographics[level_name].nonresident_alien_total += nonresident_alien_total;
+							institutionsData[id].demographics[level_name].nonresident_alien_men += nonresident_alien_men;
+							institutionsData[id].demographics[level_name].nonresident_alien_women += nonresident_alien_women;
+						}
+					}
+				});
+			});
+
+			console.log("finished importing demographics, starting financial aid data importing");
+
+			_.each([finaid2010, finaid2011, finaid2012], function(finaid_set) {
+				_.each(finaid_set, function(row) {
+					var id = row["UNITID"];
+					if (institutionsData[id] !== undefined) {
+						institutionsData[id].finaid.num_data += 1;
+						institutionsData[id].finaid.average += parseCellToInt(row["GIS4A2"]);
+						institutionsData[id].finaid.income_0_30000 += parseCellToInt(row["GIS4A12"]);
+						institutionsData[id].finaid.income_30001_48000 += parseCellToInt(row["GIS4A22"]);
+						institutionsData[id].finaid.income_48001_75000 += parseCellToInt(row["GIS4A32"]);
+						institutionsData[id].finaid.income_75001_110000 += parseCellToInt(row["GIS4A42"]);
+						institutionsData[id].finaid.income_110001_more += parseCellToInt(row["GIS4A52"]);
+					}
+				});
+			});
+
+			console.log("finished importing financial aid data, starting tuition data importing");
+
+			_.each([tuition2010, tuition2011, tuition2012], function(tuition_set) {
+				_.each(tuition_set, function(row) {
+					var id = row["UNITID"];
+					if (institutionsData[id] !== undefined) {
+						institutionsData[id].tuition.num_data += 1;
+
+						var in_state_undergrad = row["TUITION2"];
+						var out_of_state_undergrad = row["TUITION3"];
+						var in_state_grad = row["TUITION6"];
+						var out_of_state_grad = row["TUITION7"];
+
+						institutionsData[id].tuition.undergrad.in_state += in_state_undergrad;
+						institutionsData[id].tuition.undergrad.out_of_state += out_of_state_undergrad;
+						institutionsData[id].tuition.undergrad.average += (in_state_undergrad + out_of_state_undergrad) / 2;
+
+						institutionsData[id].tuition.grad.in_state += in_state_grad;
+						institutionsData[id].tuition.grad.out_of_state += out_of_state_grad;
+						institutionsData[id].tuition.grad.average += (in_state_grad + out_of_state_grad) / 2;
+
+						institutionsData[id].tuition.in_state += (in_state_undergrad + in_state_grad) / 2;
+						institutionsData[id].tuition.out_of_state += (out_of_state_undergrad + out_of_state_grad) / 2;
+						institutionsData[id].tuition.average += (in_state_undergrad + out_of_state_undergrad + in_state_grad + out_of_state_grad) / 2;
+					}
+				});
+			});
+
+			console.log("finished importing tuition data, starting finance data importing");
+
+			_.each([finance2010, finance2011, finance2012], function(finance_set) {
+				_.each(finance_set, function(row) {
+					var id = row["UNITID"];
+					if (institutionsData[id] !== undefined) {
+						var endowment = null;
+						if (row["F0910_F1A_RV.Value of endowment assets at the end of the fiscal year"].length > 0)
+							endowment = parseCellToInt(row["F0910_F1A_RV.Value of endowment assets at the end of the fiscal year"]);
+						else if (row["F0910_F2_RV.Value of endowment assets at the end of the fiscal year"].length > 0)
+							endowment = parseCellToInt(row["F0910_F2_RV.Value of endowment assets at the end of the fiscal year"]);
+						else if (row["F0910_F3_RV.Total assets"].length > 0 && row["F0910_F3_RV.Total expenses"].length > 0)
+							endowment = parseCellToInt(row["F0910_F3_RV.Total assets"]) - parseCellToInt(row["F0910_F3_RV.Total expenses"]);
+
+						if (endowment !== null) {
+							institutionsData[id].endowment_num_data += 1;
+							institutionsData[id].endowment_assets += endowment;
+						}
+					}
+				});
+			});
+
+			console.log("finished importing finance data, starting processing");
+
+			var num_institutions = _.keys(institutionsData).length, times_queried_maps_api = 0;
+			var geocoder = new google.maps.Geocoder();
+			_.each(institutionsData, function(institution) {
+				if (institution.endowment_num_data > 1)
+					institution.endowment_assets /= institution.endowment_num_data;
+
+				for (var type in institution.crime) {
+					if (!_.isObject(institution.crime[type]))
+						institution.crime[type] /= Math.max(institution.crime.num_data, 1);
+					else
+						for (var subtype in institution.crime[type])
+							institution.crime[type][subtype] /= Math.max(institution.crime[type].num_data, 1);
+				}
+
+				for (var cohort in institution.demographics) {
+					if (!_.isObject(institution.demographics[cohort]))
+						institution.demographics[cohort] /= Math.max(institution.demographics.num_data, 1);
+					else
+						for (var subcohort in institution.demographics[cohort])
+							institution.demographics[cohort][cohort] /= Math.max(institution.demographics[cohort].num_data, 1);
+				}
+
+				if (institution.finaid.num_data > 1)
+					for (var income_level in institution.finaid)
+						institution.finaid[income_level] /= institution.finaid.num_data;
+
+				if (institution.tuition.num_data > 1) {
+					for (var group in institution.tuition) {
+						if (!_.isObject(institution.tuition[group]))
+							institution.tuition[group] /= institution.tuition.num_data;
+						else
+							for (var subgroup in institution.tuition[group])
+								institution.tuition[group][subgroup] /= institution.tuition.num_data;
+					}
+				}
+
+				var address = institution.address + ", " + institution.city + ", " + institution.state + institution.zip;
+				geocoder.geocode({address: address}, function(results, status) {
+					if (status == google.maps.GeocoderStatus.OK)
+						institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
+					console.log("got response from google maps");
+					times_queried_maps_api += 1;
+					continueProcessingData();
+				});
+			});
+			
+			var continueProcessingData = function() {
+				if (times_queried_maps_api < num_institutions)
+					return;
+
+				console.log(institutionsData);
+				saveToFile(institutionsData, "institutionsData101112.json");
+
+				var statesData = [];
+			};
+
+		});
+
+		var saveToFile = function(object, filename) {
+		    var blob, blobText;
+		    blobText = [JSON.stringify(object)];
+		    blob = new Blob(blobText, {
+		        type: "text/plain;charset=utf-8"
+		    });
+		    saveAs(blob, filename);
+		};
+
+	</script>
+</body>
+</html>
