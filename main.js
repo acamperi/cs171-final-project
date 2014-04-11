@@ -47,6 +47,7 @@ var racePieVis = {
 }       
 
 var school_dot_radius = 2;
+var zscale = 1;
 
 // ===============================
 //   SETUP FUNCTIONS & VARIABLES
@@ -55,7 +56,7 @@ var school_dot_radius = 2;
 // for zoom functionality
 var zoom = d3.behavior.zoom()
     .scaleExtent([1, 10])
-    .on("zoom", move);
+    // .on("zoom", move);
 
 // for tooltip functionality
 var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip");
@@ -195,10 +196,8 @@ var loadMap = function() {
 
 // click & drag functionality, from http://techslides.com/demos/d3/worldmap-template.html
 function move() {
-
 	var t = d3.event.translate;
 	var s = d3.event.scale; 
-	console.log(t + " :::::::: " + s);
 	zscale = s;
 	var h = bbMainVis.h/4;
 
@@ -241,6 +240,12 @@ function clicked(d) {
 		k = 1;
 		centered = null;
 	}
+
+	if (zscale != 1)
+		k = 4;
+
+	zoom.scale(k);
+	zoom.translate([x, y]);
 
   	mainVisFrame.selectAll("path")
       	.classed("active", centered && function(d) { return d === centered; });
