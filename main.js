@@ -47,15 +47,15 @@ var racePieVis = {
 }
 
 var financialAidBarVis = {
-	xAxisW: 20,
+	yAxisW: 20,
 	x: genderBarVis.x + genderBarVis.w + 50,
 	chartX: 40 + genderBarVis.x + genderBarVis.w + 50,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
 	w: 220,
 	h: 300,
-	yAxisY: 10 + genderBarVis.y + 300,
-	yAxisH: 30,
+	xAxisY: 10 + genderBarVis.y + 300,
+	xAxisH: 30,
 	barWidth: 30
 }
 
@@ -82,6 +82,8 @@ var selectedSchoolObject = null;
 
 // for dummy testing
 var dummy_data = {};
+
+var detailified = false;
 
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
@@ -156,6 +158,7 @@ var loadStateData = function() {
 		console.log(selectedSchoolObject);
 
 		detailify();
+		detailfied = true;
 	});
 
 	d3.json("../data/institutionsData101112.json", function(error, data) {
@@ -286,10 +289,33 @@ loadMap();
 
 // function that generates all the detail visualizations
 function detailify() {
+	if (detailified = true) {
+		// selects visualization
+		vis = d3.select("#detailVis1");
+
+		// removes school header
+		vis.select("h2")
+			.remove();
+
+		// removes table
+		vis.select("table")
+			.remove();
+
+		// removes everything from the SVG
+		svg = vis.select("svg");
+		svg.selectAll("g")
+			.remove();
+		svg.selectAll("text")
+			.remove();
+		svg.selectAll("rect")
+			.remove();
+	}
+	detailified = false;
 	tablify();
 	genderize();
 	pieBaker();
 	financify();
+	detailified = true;
 }
 
 // function for creating an info table
@@ -476,8 +502,13 @@ function financify() {
 	financeInfoBuffer["$110000+"] = parseInt(selectedSchoolObject["finaid"]["income_110001_more"]);
 
 	financeInfo = d3.entries(financeInfoBuffer);
+	financeInfoKeys = d3.keys(financeInfoBuffer);
 
-	xScale = d3.scale.ordinal().range([0, financialAidBarVis.w]);  // define the right domain generically
+	console.log(financeInfoKeys);
+
+	xScale = d3.scale.ordinal()
+		.domain(financeInfoKeys)
+		.rangePoints([0, financialAidBarVis.w]);  // define the right domain generically
     yScale = d3.scale.linear()
     	.domain([0, d3.max(financeInfo, function(d){
     		return d.value;
@@ -515,7 +546,7 @@ function financify() {
         .append("rect")
         .attr("class", "bar")
         .attr("x", function(d, i) { 
-        	return 10 + financialAidBarVis.chartX + i * (financialAidBarVis.barWidth + 5);
+        	return financialAidBarVis.barWidth/2 + financialAidBarVis.chartX + xScale(d.key);
         })
         .attr("y", function(d) {
         	return financialAidBarVis.chartY + (financialAidBarVis.h - yScale(d.value));
@@ -533,13 +564,20 @@ function financify() {
     financialAidBars.append("g")
         .attr("class", "axis")
         .attr("id", "financialXAxis")
-        .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.yAxisY +")")
-        .call(fBXAxis);
+        .attr("transform", "translate(" + (financialAidBarVis.chartX + financialAidBarVis.barWidth) + "," + financialAidBarVis.xAxisY +")")
+        .call(fBXAxis)
+      	// modified from http://www.d3noob.org/2013/01/how-to-rotate-text-labels-for-x-axis-of.html
+        	.selectAll("text")  
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                return "rotate(-65)" 
+                });
 
     financialAidBars.append("g")
         .attr("class", "axis")
         .attr("id", "financialYAxis")
         .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
         .call(fBYAxis);
-
 }

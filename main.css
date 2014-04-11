@@ -86,8 +86,8 @@ td {
 
 /* styles used for all detailVis */
 .detailVis {
-	border: 1px dashed gray;
-	padding-left: 10px;
+	/*border: 1px dashed gray;
+*/	padding-left: 10px;
 	padding-right: 10px;
 }
 .detailVisHeader {
@@ -144,5 +144,10 @@ td {
 	fill: #FFFFFF;
 	font-family: 'Roboto Slab', serif;
 	font-weight: 200;
-	font-size: 20%;
+	font-size: 8pt;
+}
+
+#financialXAxis path
+{
+	stroke: none !important;
 }
