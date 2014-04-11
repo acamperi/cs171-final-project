@@ -33,7 +33,7 @@ var bbDetailVis = {
 var genderBarVis = {
 	x: 0,
 	y: 50,
-	w: 300,
+	w: 200,
 	h: 100,
 	barheight: 30
 };
@@ -44,7 +44,22 @@ var racePieVis = {
 	w: 300,		//width
 	h: 300,		//height
 	r: 100		//radius
-}       
+}
+
+var financialAidBarVis = {
+	yAxisW: 20,
+	x: genderBarVis.x + genderBarVis.w + 50,
+	chartX: 40 + genderBarVis.x + genderBarVis.w + 50,
+	y: genderBarVis.y,
+	chartY: 10 + genderBarVis.y,
+	w: 220,
+	h: 300,
+	xAxisY: 10 + genderBarVis.y + 300,
+	xAxisH: 30,
+	barWidth: 30
+}
+
+var school_dot_radius = 2;
 
 // ===============================
 //   SETUP FUNCTIONS & VARIABLES
@@ -56,7 +71,7 @@ var zoom = d3.behavior.zoom()
     .on("zoom", move);
 
 // for tooltip functionality
-var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip hidden");
+var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip");
 
 // for state-based zoom functionality
 var centered;
@@ -67,6 +82,8 @@ var selectedSchoolObject = null;
 
 // for dummy testing
 var dummy_data = {};
+
+var detailified = false;
 
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
@@ -106,14 +123,42 @@ var toggleSelected = function(id) {
 var loadStateData = function() {
 	// temporary dummy data tester
 	d3.json("../data/dummy_data.json", function(error, data) {
-		dummy_data = data;
+		
 
-		selectedSchool = 1;
+	var projections = [];
+	var schoolIDList = [];
+	for (var schoolID in data)
+	{
+		schoolIDList.push(schoolID);
+		projections.push(projection(data[schoolID]["lonlat"]));
+	}
+
+    dummy_data = data;
+
+	mainVisFrame.append("g").selectAll(".school").data(schoolIDList).enter().append("circle")
+    .classed("school", true)
+    .attr("r", function(x) { return school_dot_radius; })
+    .attr("cx", function(_, i) {return projections[i][0];})
+    .attr("cy", function(_, i) {return projections[i][1];})
+    .on("mouseover", function(x){return tooltip.style("visibility", "visible").text(function(){
+    	return data[x]["name"];
+ });})
+	.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+	.on("mouseout", function(){return tooltip.style("visibility", "hidden");})
+	.on("click", function(x){
+		selectedSchool = x;
+		selectedSchoolObject = data[x];
+
+		detailify();
+	});
+
+		selectedSchool = schoolIDList[0];
 		selectedSchoolObject = dummy_data[selectedSchool];
 
 		console.log(selectedSchoolObject);
 
 		detailify();
+		detailfied = true;
 	});
 
 	d3.json("../data/institutionsData101112.json", function(error, data) {
@@ -166,8 +211,10 @@ var loadMap = function() {
 
 // click & drag functionality, from http://techslides.com/demos/d3/worldmap-template.html
 function move() {
+
 	var t = d3.event.translate;
 	var s = d3.event.scale; 
+	console.log(t + " :::::::: " + s);
 	zscale = s;
 	var h = bbMainVis.h/4;
 
@@ -185,6 +232,7 @@ function move() {
 
 	//adjust the state hover stroke width based on zoom level
 	d3.selectAll(".state").style("stroke-width", 1 / s);
+	d3.selectAll(".school").attr("r", school_dot_radius / s);
 }
 
 //geo translation on mouse click in map
@@ -220,6 +268,7 @@ function clicked(d) {
       	.attr("transform", "translate(" + bbMainVis.w / 2 + "," + bbMainVis.h / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
   
   	d3.selectAll(".state").transition().duration(750).style("stroke-width", 1 / k);
+  	d3.selectAll(".school").transition().duration(750).attr("r", school_dot_radius / k);
 }
 
 // ===============================
@@ -240,9 +289,33 @@ loadMap();
 
 // function that generates all the detail visualizations
 function detailify() {
+	if (detailified = true) {
+		// selects visualization
+		vis = d3.select("#detailVis1");
+
+		// removes school header
+		vis.select("h2")
+			.remove();
+
+		// removes table
+		vis.select("table")
+			.remove();
+
+		// removes everything from the SVG
+		svg = vis.select("svg");
+		svg.selectAll("g")
+			.remove();
+		svg.selectAll("text")
+			.remove();
+		svg.selectAll("rect")
+			.remove();
+	}
+	detailified = false;
 	tablify();
 	genderize();
 	pieBaker();
+	financify();
+	detailified = true;
 }
 
 // function for creating an info table
@@ -257,6 +330,7 @@ function tablify() {
 		schoolInfoBuffer["State"] = selectedSchoolObject["state"];
 		schoolInfoBuffer["Zip Code"] = selectedSchoolObject["zip"];
 		schoolInfoBuffer["Total Assets"] = selectedSchoolObject["endowment_assets"];
+		schoolInfoBuffer["Enrollment"] = selectedSchoolObject["demographics"]["total"];
 
 		// adds school name
 		var name = d3.select("#detailVis1")
@@ -371,7 +445,7 @@ function pieBaker() {
     racePie.append("text")
 			.attr("class", "detailVisHeader")
 			.attr("x", racePieVis.x)
-			.attr("y", (racePieVis.y))
+			.attr("y", racePieVis.y)
 			.text("Race Demographics");
 
 	// bakes the pie data
@@ -396,8 +470,8 @@ function pieBaker() {
                 .attr("class", "slice");    //allow us to style things in the slices (like text)
  
         arcs.append("svg:path")
-                .attr("fill", function(d, i) { return pieColor(i); } ) //set the color for each slice to be chosen from the color function defined above
-                .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
+            .attr("fill", function(d, i) { return pieColor(i); } ) //set the color for each slice to be chosen from the color function defined above
+            .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
  
         arcs.append("svg:text")                                     //add a label to each slice
                 .attr("transform", function(d) {                    //set the label's origin to the center of the arc
@@ -415,4 +489,95 @@ function pieBaker() {
 
     // TODO: make descriptive text append to a neatly sorted area
     // TODO: make descriptive text append with boxes for the correct color
+}
+
+function financify() {
+	// pulls financial aid info
+	financeInfoBuffer = {};
+	financeInfoBuffer["Average"] = parseInt(selectedSchoolObject["finaid"]["average"]);
+	financeInfoBuffer["$0-$30000"] = parseInt(selectedSchoolObject["finaid"]["income_0_30000"]);
+	financeInfoBuffer["$30000-$48000"] = parseInt(selectedSchoolObject["finaid"]["income_30001_48000"]);
+	financeInfoBuffer["$48000-$75000"] = parseInt(selectedSchoolObject["finaid"]["income_48001_75000"]);
+	financeInfoBuffer["$75000-110000"] = parseInt(selectedSchoolObject["finaid"]["income_75001_110000"]);
+	financeInfoBuffer["$110000+"] = parseInt(selectedSchoolObject["finaid"]["income_110001_more"]);
+
+	financeInfo = d3.entries(financeInfoBuffer);
+	financeInfoKeys = d3.keys(financeInfoBuffer);
+
+	console.log(financeInfoKeys);
+
+	xScale = d3.scale.ordinal()
+		.domain(financeInfoKeys)
+		.rangePoints([0, financialAidBarVis.w]);  // define the right domain generically
+    yScale = d3.scale.linear()
+    	.domain([0, d3.max(financeInfo, function(d){
+    		return d.value;
+   		})])
+   		.range([0, financialAidBarVis.h]);
+   	inverseYScale = d3.scale.linear()
+    	.domain([0, d3.max(financeInfo, function(d){
+    		return d.value;
+   		})])
+   		.range([financialAidBarVis.h, 0]);
+
+	var fBXAxis = d3.svg.axis()
+      .scale(xScale)
+      .orient("bottom");
+
+    var fBYAxis = d3.svg.axis()
+      .scale(inverseYScale)
+      .orient("left");
+
+	// selects the canvas on which to make the visualization
+    var financialAidBars = d3.select("#detailVis1")
+    	.select("svg");
+
+    // makes the title
+    financialAidBars.append("text")
+		.attr("class", "detailVisHeader")
+		.attr("x", financialAidBarVis.x)
+		.attr("y", (financialAidBarVis.y - 10))
+		.text("Financial Aid");
+
+	// makes the bars
+	financialAidBars.selectAll(".bar")
+        .data(financeInfo)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d, i) { 
+        	return financialAidBarVis.barWidth/2 + financialAidBarVis.chartX + xScale(d.key);
+        })
+        .attr("y", function(d) {
+        	return financialAidBarVis.chartY + (financialAidBarVis.h - yScale(d.value));
+        })
+        .attr("width", function(d, i) {
+        	return financialAidBarVis.barWidth;
+        })
+        .attr("height", function(d) {
+        	return yScale(d.value);
+        })
+        .attr("title", function(d) {
+        	return d.key;
+        });
+
+    financialAidBars.append("g")
+        .attr("class", "axis")
+        .attr("id", "financialXAxis")
+        .attr("transform", "translate(" + (financialAidBarVis.chartX + financialAidBarVis.barWidth) + "," + financialAidBarVis.xAxisY +")")
+        .call(fBXAxis)
+      	// modified from http://www.d3noob.org/2013/01/how-to-rotate-text-labels-for-x-axis-of.html
+        	.selectAll("text")  
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                return "rotate(-65)" 
+                });
+
+    financialAidBars.append("g")
+        .attr("class", "axis")
+        .attr("id", "financialYAxis")
+        .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
+        .call(fBYAxis);
 }
