@@ -1,6 +1,7 @@
 institutionsData101112.json:
 ============================
 id: {
+	id,
 	name,
 	branch,
 	address,

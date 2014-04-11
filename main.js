@@ -73,6 +73,7 @@ var crimeBarVis = {
 }
 
 var school_dot_radius = 2;
+var zscale = 1;
 
 // ===============================
 //   SETUP FUNCTIONS & VARIABLES
@@ -81,7 +82,7 @@ var school_dot_radius = 2;
 // for zoom functionality
 var zoom = d3.behavior.zoom()
     .scaleExtent([1, 10])
-    .on("zoom", move);
+    // .on("zoom", move);
 
 // for tooltip functionality
 var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip");
@@ -92,9 +93,6 @@ var centered;
 // for when a school has been selected or not
 var selectedSchool = null;
 var selectedSchoolObject = null;
-
-// for dummy testing
-var dummy_data = {};
 
 var detailified = false;
 
@@ -120,7 +118,7 @@ var detailVisFrames = d3.selectAll(".detailVis")
 	.append("g")
 		.attr("transform", "translate(" + detailVisMargin.left + "," + detailVisMargin.top + ")")
 	.append("g")
-		.attr("transform", "translate(" + bbDetailVis.x + "," + bbDetailVis.y + ")")
+		.attr("transform", "translate(" + bbDetailVis.x + "," + bbDetailVis.y + ")");
 
 var projection = d3.geo.albersUsa().translate([bbMainVis.w / 2, bbMainVis.h / 2]);//.precision(.1);
 var path = d3.geo.path().projection(projection);
@@ -134,50 +132,45 @@ var toggleSelected = function(id) {
 };
 
 var loadStateData = function() {
-	// temporary dummy data tester
-	d3.json("../data/dummy_data.json", function(error, data) {
-		
+	d3.json("../data/institutionsData101112.json", function(error, data) {
+		var projections = [];
+		var schoolIDList = [];
+		var c = 0;
+		for (var schoolID in data)
+		{
+			var computed_projection = projection(data[schoolID]["lonlat"]);
+			if (computed_projection !== null) {
+				schoolIDList.push(schoolID);
+				projections.push(computed_projection);
+			}
+		}
+		console.log(c);
 
-	var projections = [];
-	var schoolIDList = [];
-	for (var schoolID in data)
-	{
-		schoolIDList.push(schoolID);
-		projections.push(projection(data[schoolID]["lonlat"]));
-	}
+		console.log(projections);
+		mainVisFrame.append("g").selectAll(".school").data(schoolIDList).enter().append("circle")
+		.classed("school", true)
+		.attr("r", function(x) { return school_dot_radius; })
+		.attr("cx", function(_, i) {return projections[i][0];})
+		.attr("cy", function(_, i) {return projections[i][1];})
+		.on("mouseover", function(x){return tooltip.style("visibility", "visible").text(function(){
+			return data[x]["name"];
+			});})
+		.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+		.on("mouseout", function(){return tooltip.style("visibility", "hidden");})
+		.on("click", function(x){
+			selectedSchool = x;
+			selectedSchoolObject = data[x];
 
-    dummy_data = data;
-
-	mainVisFrame.append("g").selectAll(".school").data(schoolIDList).enter().append("circle")
-    .classed("school", true)
-    .attr("r", function(x) { return school_dot_radius; })
-    .attr("cx", function(_, i) {return projections[i][0];})
-    .attr("cy", function(_, i) {return projections[i][1];})
-    .on("mouseover", function(x){return tooltip.style("visibility", "visible").text(function(){
-    	return data[x]["name"];
- });})
-	.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-	.on("mouseout", function(){return tooltip.style("visibility", "hidden");})
-	.on("click", function(x){
-		selectedSchool = x;
-		selectedSchoolObject = data[x];
-
-		detailify();
-	});
+			detailify();
+		});
 
 		selectedSchool = schoolIDList[0];
-		selectedSchoolObject = dummy_data[selectedSchool];
+		selectedSchoolObject = data[selectedSchool];
 
 		console.log(selectedSchoolObject);
 
 		detailify();
 		detailfied = true;
-	});
-
-	d3.json("../data/institutionsData101112.json", function(error, data) {
-		// load in state data, prepare scales etc
-
-		// setup toggle interaction
 	});
 };
 
@@ -224,10 +217,8 @@ var loadMap = function() {
 
 // click & drag functionality, from http://techslides.com/demos/d3/worldmap-template.html
 function move() {
-
 	var t = d3.event.translate;
 	var s = d3.event.scale; 
-	console.log(t + " :::::::: " + s);
 	zscale = s;
 	var h = bbMainVis.h/4;
 
@@ -270,6 +261,12 @@ function clicked(d) {
 		k = 1;
 		centered = null;
 	}
+
+	if (zscale != 1)
+		k = 4;
+
+	zoom.scale(k);
+	zoom.translate([x, y]);
 
   	mainVisFrame.selectAll("path")
       	.classed("active", centered && function(d) { return d === centered; });
