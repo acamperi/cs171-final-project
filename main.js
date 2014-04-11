@@ -47,10 +47,16 @@ var racePieVis = {
 }
 
 var financialAidBarVis = {
+	xAxisW: 20,
 	x: genderBarVis.x + genderBarVis.w + 50,
+	chartX: 40 + genderBarVis.x + genderBarVis.w + 50,
 	y: genderBarVis.y,
-	w: 300,
-	h: 300
+	chartY: 10 + genderBarVis.y,
+	w: 220,
+	h: 300,
+	yAxisY: 10 + genderBarVis.y + 300,
+	yAxisH: 30,
+	barWidth: 30
 }
 
 // ===============================
@@ -465,22 +471,69 @@ function financify() {
 
 	financeInfo = d3.entries(financeInfoBuffer);
 
-	// selects the canvas on which to bake the pie
+	xScale = d3.scale.ordinal().range([0, financialAidBarVis.w]);  // define the right domain generically
+    yScale = d3.scale.linear()
+    	.domain([0, d3.max(financeInfo, function(d){
+    		return d.value;
+   		})])
+   		.range([0, financialAidBarVis.h]);
+   	inverseYScale = d3.scale.linear()
+    	.domain([0, d3.max(financeInfo, function(d){
+    		return d.value;
+   		})])
+   		.range([financialAidBarVis.h, 0]);
+
+	var fBXAxis = d3.svg.axis()
+      .scale(xScale)
+      .orient("bottom");
+
+    var fBYAxis = d3.svg.axis()
+      .scale(inverseYScale)
+      .orient("left");
+
+	// selects the canvas on which to make the visualization
     var financialAidBars = d3.select("#detailVis1")
     	.select("svg");
 
-    // bakes the pie name
+    // makes the title
     financialAidBars.append("text")
-			.attr("class", "detailVisHeader")
-			.attr("x", financialAidBarVis.x)
-			.attr("y", (financialAidBarVis.y - 10))
-			.text("Financial Aid");
+		.attr("class", "detailVisHeader")
+		.attr("x", financialAidBarVis.x)
+		.attr("y", (financialAidBarVis.y - 10))
+		.text("Financial Aid");
 
+	// makes the bars
 	financialAidBars.selectAll(".bar")
         .data(financeInfo)
         .enter()
         .append("rect")
-        .transition()
-        .duration(1000)
-        .delay(function(d, i) { return i * 20; });
+        .attr("class", "bar")
+        .attr("x", function(d, i) { 
+        	return 10 + financialAidBarVis.chartX + i * (financialAidBarVis.barWidth + 5);
+        })
+        .attr("y", function(d) {
+        	return financialAidBarVis.chartY + (financialAidBarVis.h - yScale(d.value));
+        })
+        .attr("width", function(d, i) {
+        	return financialAidBarVis.barWidth;
+        })
+        .attr("height", function(d) {
+        	return yScale(d.value);
+        })
+        .attr("title", function(d) {
+        	return d.key;
+        });
+
+    financialAidBars.append("g")
+        .attr("class", "axis")
+        .attr("id", "financialXAxis")
+        .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.yAxisY +")")
+        .call(fBXAxis);
+
+    financialAidBars.append("g")
+        .attr("class", "axis")
+        .attr("id", "financialYAxis")
+        .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
+        .call(fBYAxis);
+
 }

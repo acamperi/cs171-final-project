@@ -130,3 +130,19 @@ td {
 .pieText {
 	font-size: 10%;
 }
+
+.axis line,
+.axis path 
+{
+	shape-rendering: crispEdges;
+	stroke: #FFFFFF;
+	fill: none;
+}
+
+.tick
+{
+	fill: #FFFFFF;
+	font-family: 'Roboto Slab', serif;
+	font-weight: 200;
+	font-size: 20%;
+}
