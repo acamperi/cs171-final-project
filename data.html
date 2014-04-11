@@ -403,11 +403,10 @@
 						institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
 					console.log("got response from google maps");
 					times_queried_maps_api += 1;
-					continueProcessingData();
 				});
 			});
-			
-			var continueProcessingData = function() {
+
+			setTimeout(function() {
 				if (times_queried_maps_api < num_institutions)
 					return;
 
@@ -415,8 +414,8 @@
 				saveToFile(institutionsData, "institutionsData101112.json");
 
 				var statesData = [];
-			};
-
+			}, 30000);
+			
 		});
 
 		var saveToFile = function(object, filename) {
