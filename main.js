@@ -72,7 +72,7 @@ var crimeBarVis = {
 	barWidth: 30
 }
 
-var school_dot_radius = 2;
+var school_dot_radius = 1;
 var zscale = 1;
 
 // ===============================
@@ -132,7 +132,7 @@ var toggleSelected = function(id) {
 };
 
 var loadStateData = function() {
-	d3.json("../data/institutionsData101112.json", function(error, data) {
+	d3.json("data/institutionsData101112.json", function(error, data) {
 		var projections = [];
 		var schoolIDList = [];
 		var c = 0;
