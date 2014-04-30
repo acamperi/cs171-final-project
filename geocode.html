@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>College Campus Security Data Processing</title>
+</head>
+<body>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://d3js.org/queue.v1.min.js"></script>
+	<script src="http://d3js.org/topojson.v1.min.js"></script>
+	<script src="http://underscorejs.org/underscore-min.js"></script>
+	<script src="libs/jquery-1.11.0.min.js"></script>
+	<script src="libs/FileSaver.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAINlEx2X4DelZtE8xArwot4qyuK6A8DFA&sensor=false"></script>
+
+	<script>
+
+	d3.json("data/institutionsData101112.json", function(error, institutionsData) {
+		var invalid_addresses = ["id\taddress\tcity\tstate\tzip"];
+		var num_institutions = _.keys(institutionsData).length, num_incomplete_institutions = 0;
+		var times_queried_maps_api = 0, num_positive_responses = 0;
+		var geocoder = new google.maps.Geocoder();
+		var index = 0;
+		_.each(institutionsData, function(institution) {
+			if (institution.lonlat.length === 0) {
+				num_incomplete_institutions++;
+				setTimeout(function() {
+					var address = institution.address + ", " + institution.city + ", " + institution.state + " " + institution.zip;
+					geocoder.geocode({address: address}, function(results, status) {
+						if (status == google.maps.GeocoderStatus.OK) {
+							institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
+							num_positive_responses++;
+						}
+						else
+							invalid_addresses.push([institution.id, institution.address, institution.city, institution.state, institution.zip].join('\t'));
+						console.log("got response from google maps, positive = " + (status == google.maps.GeocoderStatus.OK));
+						times_queried_maps_api++;
+					});
+				}, index * 10000);
+				index++;
+			}
+		});
+		setTimeout(function() {
+			console.log("total institutions = " + num_institutions + "; incomplete institutions = " + num_incomplete_institutions + "; positive responses = " + num_positive_responses);
+			console.log(institutionsData);
+			saveToFile(institutionsData, "institutionsData101112.json");
+			saveToTSV(invalid_addresses, "addresses.tsv");
+		}, 2000000);
+	});
+
+	var saveToFile = function(object, filename) {
+	    var blob, blobText;
+	    blobText = [JSON.stringify(object)];
+	    blob = new Blob(blobText, {
+	        type: "text/plain;charset=utf-8"
+	    });
+	    saveAs(blob, filename);
+	};
+
+	var saveToTSV = function(lines, filename) {
+		var blob, blobText;
+		blobText = [lines.join('\n')];
+		blob = new Blob(blobText, {
+			type: "text/plain;charset=utf-8"
+		});
+		saveAs(blob, filename);
+	};
+
+	</script>
+</body>
+</html>
