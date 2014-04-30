@@ -9,10 +9,11 @@ var mainVisMargin = {
 	left: 50
 };
 
+// definitions for map
 var bbMainVis = {
 	x: 0,
 	y: 0,
-	w: 900 - mainVisMargin.left - mainVisMargin.right,
+	w: 780 - mainVisMargin.left - mainVisMargin.right,
 	h: 500 - mainVisMargin.top - mainVisMargin.bottom
 };
 
@@ -26,14 +27,22 @@ var detailVisMargin = {
 var bbDetailVis = {
 	x: 0,
 	y: 0,
-	w: 800 - detailVisMargin.left - detailVisMargin.right,
-	h: 600 - detailVisMargin.top - detailVisMargin.bottom
+	w: 420 - detailVisMargin.left - detailVisMargin.right,
+	h: 300 - detailVisMargin.top - detailVisMargin.bottom
+};
+
+var bbDetailTabs = {
+	x: 0,
+	y: 0,
+	w: 420,
+	h: 25,
+	barCount: 2
 };
 
 var genderBarVis = {
 	x: 0,
-	y: 50,
-	w: 200,
+	y: 30,
+	w: 140,
 	h: 100,
 	barheight: 30
 };
@@ -41,9 +50,9 @@ var genderBarVis = {
 var racePieVis = {
 	x: genderBarVis.x,
 	y: genderBarVis.y + genderBarVis.h,
-	w: 300,		//width
-	h: 300,		//height
-	r: 100		//radius
+	w: 140,		//width
+	h: 140,		//height
+	r: 70		//radius
 }
 
 var financialAidBarVis = {
@@ -52,24 +61,24 @@ var financialAidBarVis = {
 	chartX: 40 + genderBarVis.x + genderBarVis.w + 50,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
-	w: 220,
-	h: 300,
-	xAxisY: 10 + genderBarVis.y + 300,
+	w: 150,
+	h: 200,
+	xAxisY: 10 + genderBarVis.y + 200,
 	xAxisH: 30,
-	barWidth: 30
+	barWidth: 15
 }
 
 var crimeBarVis = {
 	yAxisW: 20,
-	x: genderBarVis.x + 50,
-	chartX: genderBarVis.x + 50,
+	x: 0,
+	chartX: genderBarVis.x + 30,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
-	w: 400,
-	h: 300,
-	xAxisY: 10 + genderBarVis.y + 300,
+	w: 350,
+	h: 200,
+	xAxisY: 10 + genderBarVis.y + 200,
 	xAxisH: 30,
-	barWidth: 30
+	barWidth: 25
 }
 
 var school_dot_radius = 1;
@@ -95,6 +104,8 @@ var selectedSchool = null;
 var selectedSchoolObject = null;
 
 var detailified = false;
+var currentTab = 1;
+var newPage = true;
 
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
@@ -104,6 +115,7 @@ var mainVisFrame = d3.select("#mainVis")
 	.append("svg")
 		.attr("width", bbMainVis.w + mainVisMargin.left + mainVisMargin.right)
 		.attr("height", bbMainVis.h + mainVisMargin.top + mainVisMargin.bottom)
+		.attr("id", "#mainVisView")
 	.append("g")
 		.attr("transform", "translate(" + mainVisMargin.left + "," + mainVisMargin.top + ")")
 	.append("g")
@@ -111,10 +123,11 @@ var mainVisFrame = d3.select("#mainVis")
 	.call(zoom) // applies zoom functionality to the mainVisFrame
 	.on("click", click); // applies on-click zoom functionality
 
-var detailVisFrames = d3.selectAll(".detailVis")
+var detailVisFrames = d3.select("#detailVis")
 	.append("svg")
 		.attr("width", bbDetailVis.w + detailVisMargin.left + detailVisMargin.right)
 		.attr("height", bbDetailVis.h + detailVisMargin.top + detailVisMargin.bottom)
+		.attr("id", "canvas")
 	.append("g")
 		.attr("transform", "translate(" + detailVisMargin.left + "," + detailVisMargin.top + ")")
 	.append("g")
@@ -163,6 +176,13 @@ var loadStateData = function() {
 			selectedSchool = x;
 			selectedSchoolObject = data[x];
 
+			if(newPage == true) {
+				d3.select("#clickPlease")
+					.remove();
+				newPage = false;
+				tabbify();
+			}
+
 			detailify();
 		});
 
@@ -170,8 +190,7 @@ var loadStateData = function() {
 		selectedSchoolObject = data[selectedSchool];
 
 		console.log(selectedSchoolObject);
-
-		detailify();
+		
 		detailfied = true;
 	});
 };
@@ -299,28 +318,104 @@ loadMap();
 //   LAUNCH DETAIL VISUALIZATION
 // ===============================
 
+// function that creates the SVG tabs
+function tabbify() {
+	var tabBar = d3.select("#detailVis")
+		.insert("svg", "#canvas")
+			.attr("width", bbDetailTabs.w)
+			.attr("height", bbDetailTabs.h)
+			.attr("id", "tabBar")
+			.style("padding-bottom", "10px");
+
+	var tabBar1 = tabBar.append("g")
+		.attr("id", "tabBar1");
+	tabBar1.append("rect")
+		.attr("x", 0)
+		.attr("y", 0)
+		.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
+		.attr("height", bbDetailTabs.h)
+		.attr("fill", "#FFFFFF")
+	tabBar1.append("text")
+		.attr("text-anchor", "middle")
+		.attr("x", bbDetailTabs.w/(bbDetailTabs.barCount*2))
+		.attr("y", bbDetailTabs.h/2 + 5)
+		.text("School Data");
+
+	var tabBar2 = tabBar.append("g")
+		.attr("id", "tabBar2");
+	tabBar2.append("rect")
+		.attr("x", bbDetailTabs.w/bbDetailTabs.barCount)
+		.attr("y", 0)
+		.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
+		.attr("height", bbDetailTabs.h)
+		.attr("fill", "#BBBBBB")
+	tabBar2.append("text")
+		.attr("text-anchor", "middle")
+		.attr("x", bbDetailTabs.w/bbDetailTabs.barCount + bbDetailTabs.w/(bbDetailTabs.barCount*2))
+		.attr("y", bbDetailTabs.h/2 + 5)
+		.text("Crime Statistics");
+
+	tabBar1.on("click", function(){
+		if(currentTab != 1) {
+			d3.selectAll(".tab2")
+				.attr("opacity", "0");
+			d3.selectAll(".tab1")
+				.attr("opacity", "1");
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar1")
+				.select("svg rect")
+				.attr("fill", "#FFFFFF");
+			currentTab = 1;
+		}
+	});
+
+	tabBar2.on("click", function(){
+		if(currentTab != 2) {
+			d3.selectAll(".tab2")
+				.attr("opacity", "1");
+			d3.selectAll(".tab1")
+				.attr("opacity", "0");
+			d3.select("#tabBar1")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#FFFFFF");
+			currentTab = 2;
+		}
+	});
+}
+
 // function that generates all the detail visualizations
 function detailify() {
 	if (detailified = true) {
 		// selects visualization
-		vis = d3.select("#detailVis1");
+		vis1 = d3.select("#detailVis");
 
 		// removes school header
-		vis.select("h2")
+		vis1.select("h2")
 			.remove();
 
 		// removes table
-		vis.select("table")
+		vis1.select("#dataTable")
 			.remove();
 
+		// removes everything from the canvas
+		svg1 = vis1.select("#canvas");
+		svg1.selectAll("g")
+			.remove();
+		svg1.selectAll("text")
+			.remove();
+
+		vis2 = d3.select("#detailVis2");
+
 		// removes everything from the SVG
-		svg = vis.select("svg");
-		svg.selectAll("g")
+		svg2 = vis2.select("svg");
+		svg2.selectAll("g")
 			.remove();
-		svg.selectAll("text")
-			.remove();
-		svg.selectAll("rect")
-			.remove();
+
 	}
 	detailified = false;
 	tablify();
@@ -338,21 +433,25 @@ function tablify() {
 		schoolName = selectedSchoolObject["name"];
 		// schoolBranch = selectedSchoolObject["branch"];
 		schoolInfoBuffer = {};
-		schoolInfoBuffer["Address"] = selectedSchoolObject["address"];
-		schoolInfoBuffer["City"] = selectedSchoolObject["city"];
-		schoolInfoBuffer["State"] = selectedSchoolObject["state"];
-		schoolInfoBuffer["Zip Code"] = selectedSchoolObject["zip"];
+		schoolInfoBuffer["Street Address"] = selectedSchoolObject["address"];
+		schoolInfoBuffer["City, State, Zip Code"] = selectedSchoolObject["city"] + ", " + selectedSchoolObject["state"] + " " + selectedSchoolObject["zip"];
 		schoolInfoBuffer["Total Assets"] = selectedSchoolObject["endowment_assets"];
 		schoolInfoBuffer["Enrollment"] = selectedSchoolObject["demographics"]["total"];
 
+		var dataTable = d3.select("#detailVis")
+			.insert("div", "#canvas")
+			.attr("id", "dataTable")
+			.attr("class", "tab1")
+			.style("padding", "0px");
+
 		// adds school name
-		var name = d3.select("#detailVis1")
-			.insert("h2", "svg")
+		var name = d3.select("#detailVis")
+			.insert("h2", "#dataTable")
 			.text(schoolName);
 
 		// sets up the table based on schoolInfoBuffer
-		var table = d3.select("#detailVis1")
-			.insert("table", "svg");
+		var table = dataTable
+			.append("table");
 		var tbody = table.append("tbody");
 		var rows = tbody.selectAll("tr")
 			.data(d3.entries(schoolInfoBuffer)) // d3.entries converts objects into entries with key:key value:value parameters
@@ -387,15 +486,16 @@ function genderize() {
 		var fPercent = females/total;
 		var oPercent = (total-(males+females))/total;
 
-		console.log(mPercent);
-
-		var genderBars = d3.select("#detailVis1")
-			.selectAll("svg");
+		var genderBars = d3.select("#detailVis")
+			.select("#canvas")
+			.append("g")
+    		.attr("id", "genderBars")
+    		.attr("class", "tab1");
 
 		genderBars.append("text")
 			.attr("class", "detailVisHeader")
 			.attr("x", genderBarVis.x)
-			.attr("y", genderBarVis.y - 10)
+			.attr("y", genderBarVis.y - 5)
 			.text("Gender");
 
 		var maleBar = genderBars.append("rect")
@@ -424,14 +524,14 @@ function genderize() {
 			.attr("y", genderBarVis.y + genderBarVis.barheight + 20)
 			.attr("text-anchor", "start")
 			.attr("class", "detailVisDetailText")
-			.text(100 * mPercent.toFixed(4) + "% Male");
+			.text(100 * mPercent.toFixed(4) + "% M");
 
 		var femaleText = genderBars.append("text")
 			.attr("x", genderBarVis.x + genderBarVis.w)
 			.attr("y", genderBarVis.y + genderBarVis.barheight + 20)
 			.attr("text-anchor", "end")
 			.attr("class", "detailVisDetailText")
-			.text(100 * fPercent.toFixed(4) + "% Female");
+			.text(100 * fPercent.toFixed(4) + "% F");
 	}
 }
 
@@ -451,8 +551,11 @@ function pieBaker() {
 	raceInfoBuffer["International"] = parseInt(selectedSchoolObject["demographics"]["nonresident_alien_total"]);
 
 	// selects the canvas on which to bake the pie
-    var racePie = d3.select("#detailVis1")
-    	.select("svg");
+    var racePie = d3.select("#detailVis")
+    	.select("#canvas")
+    	.append("g")
+    	.attr("id", "racePie")
+    	.attr("class", "tab1");
 
     // bakes the pie name
     racePie.append("text")
@@ -500,6 +603,8 @@ function pieBaker() {
             	return entries[i]["key"]; 
             });        //get the label from our original data array
 
+
+
     // TODO: make descriptive text append to a neatly sorted area
     // TODO: make descriptive text append with boxes for the correct color
 }
@@ -508,11 +613,11 @@ function financify() {
 	// pulls financial aid info
 	financeInfoBuffer = {};
 	financeInfoBuffer["Average"] = parseInt(selectedSchoolObject["finaid"]["average"]);
-	financeInfoBuffer["$0-$30000"] = parseInt(selectedSchoolObject["finaid"]["income_0_30000"]);
-	financeInfoBuffer["$30000-$48000"] = parseInt(selectedSchoolObject["finaid"]["income_30001_48000"]);
-	financeInfoBuffer["$48000-$75000"] = parseInt(selectedSchoolObject["finaid"]["income_48001_75000"]);
-	financeInfoBuffer["$75000-110000"] = parseInt(selectedSchoolObject["finaid"]["income_75001_110000"]);
-	financeInfoBuffer["$110000+"] = parseInt(selectedSchoolObject["finaid"]["income_110001_more"]);
+	financeInfoBuffer["$0-$3k"] = parseInt(selectedSchoolObject["finaid"]["income_0_30000"]);
+	financeInfoBuffer["$30k-$48k"] = parseInt(selectedSchoolObject["finaid"]["income_30001_48000"]);
+	financeInfoBuffer["$48k-$75k"] = parseInt(selectedSchoolObject["finaid"]["income_48001_75000"]);
+	financeInfoBuffer["$75k-110k"] = parseInt(selectedSchoolObject["finaid"]["income_75001_110000"]);
+	financeInfoBuffer["$110k+"] = parseInt(selectedSchoolObject["finaid"]["income_110001_more"]);
 
 	financeInfo = d3.entries(financeInfoBuffer);
 	financeInfoKeys = d3.keys(financeInfoBuffer);
@@ -542,14 +647,17 @@ function financify() {
       .orient("left");
 
 	// selects the canvas on which to make the visualization
-    var financialAidBars = d3.select("#detailVis1")
-    	.select("svg");
+    var financialAidBars = d3.select("#detailVis")
+    	.select("#canvas")
+    	.append("g")
+    	.attr("id", "financialAidBars")
+    	.attr("class", "tab1");
 
     // makes the title
     financialAidBars.append("text")
 		.attr("class", "detailVisHeader")
 		.attr("x", financialAidBarVis.x)
-		.attr("y", (financialAidBarVis.y - 10))
+		.attr("y", (financialAidBarVis.y - 5))
 		.text("Financial Aid");
 
 	// makes the bars
@@ -593,6 +701,26 @@ function financify() {
         .attr("id", "financialYAxis")
         .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
         .call(fBYAxis);
+
+    if (financeInfoBuffer["Average"] == 0) {
+    	var blankAlert = financialAidBars.append("g")
+    		.attr("class", "alertWindow");
+    	blankAlert.append("rect")
+    		.attr("width", "120px")
+    		.attr("height", "20px")
+    		.attr("x", financialAidBarVis.chartX + financialAidBarVis.w/4 - 10)
+    		.attr("y", financialAidBarVis.chartY + financialAidBarVis.h/2 - 15);
+    	blankAlert.append("text")
+    		.attr("x", financialAidBarVis.chartX + financialAidBarVis.w/4 + 60 - 10)
+    		.attr("y", financialAidBarVis.chartY + financialAidBarVis.h/2 + 15 - 15)
+    		.attr("text-anchor", "middle")
+    		.text("No data available.");
+    }
+
+    if (currentTab != 1) {
+    	d3.selectAll(".tab1")
+    	.attr("opacity", "0");
+    }
 }
 
 
@@ -638,14 +766,17 @@ function crimeify() {
       .orient("left");
 
 	// selects the canvas on which to make the visualization
-    var crimeBars = d3.select("#detailVis2")
-    	.select("svg");
+    var crimeBars = d3.select("#detailVis")
+    	.select("#canvas")
+    	.append("g")
+    	.attr("id", "crimeBars")
+    	.attr("class", "tab2");
 
     // makes the title
     crimeBars.append("text")
 		.attr("class", "detailVisHeader")
 		.attr("x", crimeBarVis.x)
-		.attr("y", (crimeBarVis.y - 10))
+		.attr("y", (crimeBarVis.y - 5))
 		.text("University Crime");
 
 	// makes the bars
@@ -689,5 +820,25 @@ function crimeify() {
         .attr("id", "crimeYAxis")
         .attr("transform", "translate(" + crimeBarVis.chartX + "," + crimeBarVis.chartY +")")
         .call(cBYAxis);
+
+    if (crimeInfoBuffer["total"] == 0) {
+    	var blankAlert = crimeBars.append("g")
+    		.attr("class", "alertWindow");
+    	blankAlert.append("rect")
+    		.attr("width", "120px")
+    		.attr("height", "20px")
+    		.attr("x", crimeBarVis.w/2 - 20)
+    		.attr("y", crimeBarVis.h/2 + 15);
+    	blankAlert.append("text")
+    		.attr("x", crimeBarVis.w/2 + 40)
+    		.attr("y", crimeBarVis.h/2 + 30)
+    		.attr("text-anchor", "middle")
+    		.text("No data available.");
+    }
+
+    if (currentTab != 2) {
+    	d3.selectAll(".tab2")
+    	.attr("opacity", "0");
+    }   
 }
 

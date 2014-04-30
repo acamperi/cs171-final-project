@@ -10,6 +10,13 @@ body {
 	font-family: sans-serif;
 }
 
+p {
+	font-weight: 700;
+	color: #999999;
+	-webkit-margin-before: 0pt;
+	-webkit-margin-after: 0pt;
+}
+
 /* Used for the main header*/
 h1 {
 	font-family: 'Exo', sans-serif;
@@ -26,9 +33,10 @@ h2 {
 	font-weight: 700;
 	text-align: left;
 	color: #FFFFFF;
-	line-height: 10pt;
+	line-height: 18pt;
 	font-size: 20pt;
-	-webkit-margin-after: 10pt;
+	-webkit-margin-before: 0pt;
+	-webkit-margin-after: 5pt;
 }
 
 h4 {
@@ -37,12 +45,13 @@ h4 {
 	text-align: left;
 	color: #DDDDDD;
 	font-size: 12pt;
-	-webkit-margin-after: 0px;
+	-webkit-margin-after: 4pt;
+	-webkit-margin-before: 0pt;
 }
 
 div {
-	padding-left: 50px;
-	padding-right: 50px;
+	padding-left: 20px;
+	padding-right: 20px;
 	padding-bottom: 10px;
 }
 
@@ -53,6 +62,7 @@ sup {
 
 table {
 	border-spacing: 0px 2px;
+	font-size: 10pt;
 }
 th {
 	font-family: 'Roboto Slab', serif;
@@ -69,7 +79,7 @@ td {
 
 /* styles used for the header */
 #headerArea {
-	padding-top: 30px;
+	padding-top: 5px;
 }
 
 /* styles used for the map*/
@@ -85,6 +95,9 @@ td {
 }
 
 /* styles used for all detailVis */
+#detailVis {
+	padding-left: 10px;
+}
 .detailVis {
 	/*border: 1px dashed gray;
 */	padding-left: 10px;
@@ -117,6 +130,9 @@ td {
 }
 
 /* styles used for the genderBar visualization*/
+#genderBar {
+	font-size: 10pt;
+}
 .maleBar {
 	fill: #333333;
 }
@@ -147,7 +163,21 @@ td {
 	font-size: 8pt;
 }
 
+#crimeXAxis path,
 #financialXAxis path
 {
 	stroke: none !important;
+}
+
+.axis .minor line {
+  stroke: #777;
+  stroke-dasharray: 2,2;
+}
+
+.alertWindow rect {
+	fill: #CC3333;
+}
+.alertWindow text {
+	font-weight: 500;
+	fill: #FFFFFF;
 }
