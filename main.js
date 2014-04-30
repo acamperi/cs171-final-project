@@ -416,18 +416,6 @@ function detailify() {
 		svg2.selectAll("g")
 			.remove();
 
-		// resets tabs
-		d3.selectAll(".tab2")
-				.attr("opacity", "0");
-			d3.selectAll(".tab1")
-				.attr("opacity", "1");
-			d3.select("#tabBar2")
-				.select("svg rect")
-				.attr("fill", "#BBBBBB");
-			d3.select("#tabBar1")
-				.select("svg rect")
-				.attr("fill", "#FFFFFF");
-			currentTab = 1;
 	}
 	detailified = false;
 	tablify();
@@ -713,6 +701,11 @@ function financify() {
         .attr("id", "financialYAxis")
         .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
         .call(fBYAxis);
+
+    if (currentTab != 1) {
+    	d3.selectAll(".tab1")
+    	.attr("opacity", "0");
+    }
 }
 
 
@@ -813,7 +806,9 @@ function crimeify() {
         .attr("transform", "translate(" + crimeBarVis.chartX + "," + crimeBarVis.chartY +")")
         .call(cBYAxis);
 
-    d3.selectAll(".tab2")
+    if (currentTab != 2) {
+    	d3.selectAll(".tab2")
     	.attr("opacity", "0");
+    }   
 }
 
