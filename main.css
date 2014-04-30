@@ -173,3 +173,11 @@ td {
   stroke: #777;
   stroke-dasharray: 2,2;
 }
+
+.alertWindow rect {
+	fill: #CC3333;
+}
+.alertWindow text {
+	font-weight: 500;
+	fill: #FFFFFF;
+}

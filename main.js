@@ -702,6 +702,21 @@ function financify() {
         .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
         .call(fBYAxis);
 
+    if (financeInfoBuffer["Average"] == 0) {
+    	var blankAlert = financialAidBars.append("g")
+    		.attr("class", "alertWindow");
+    	blankAlert.append("rect")
+    		.attr("width", "120px")
+    		.attr("height", "20px")
+    		.attr("x", financialAidBarVis.chartX + financialAidBarVis.w/4 - 10)
+    		.attr("y", financialAidBarVis.chartY + financialAidBarVis.h/2 - 15);
+    	blankAlert.append("text")
+    		.attr("x", financialAidBarVis.chartX + financialAidBarVis.w/4 + 60 - 10)
+    		.attr("y", financialAidBarVis.chartY + financialAidBarVis.h/2 + 15 - 15)
+    		.attr("text-anchor", "middle")
+    		.text("No data available.");
+    }
+
     if (currentTab != 1) {
     	d3.selectAll(".tab1")
     	.attr("opacity", "0");
@@ -805,6 +820,21 @@ function crimeify() {
         .attr("id", "crimeYAxis")
         .attr("transform", "translate(" + crimeBarVis.chartX + "," + crimeBarVis.chartY +")")
         .call(cBYAxis);
+
+    if (crimeInfoBuffer["total"] == 0) {
+    	var blankAlert = crimeBars.append("g")
+    		.attr("class", "alertWindow");
+    	blankAlert.append("rect")
+    		.attr("width", "120px")
+    		.attr("height", "20px")
+    		.attr("x", crimeBarVis.w/2 - 20)
+    		.attr("y", crimeBarVis.h/2 + 15);
+    	blankAlert.append("text")
+    		.attr("x", crimeBarVis.w/2 + 40)
+    		.attr("y", crimeBarVis.h/2 + 30)
+    		.attr("text-anchor", "middle")
+    		.text("No data available.");
+    }
 
     if (currentTab != 2) {
     	d3.selectAll(".tab2")
