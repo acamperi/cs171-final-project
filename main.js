@@ -27,16 +27,16 @@ var detailVisMargin = {
 var bbDetailVis = {
 	x: 0,
 	y: 0,
-	w: 450 - detailVisMargin.left - detailVisMargin.right,
+	w: 420 - detailVisMargin.left - detailVisMargin.right,
 	h: 300 - detailVisMargin.top - detailVisMargin.bottom
 };
 
 var bbDetailTabs = {
 	x: 0,
 	y: 0,
-	w: 450,
+	w: 420,
 	h: 25,
-	barCount: 3
+	barCount: 2
 };
 
 var genderBarVis = {
@@ -70,15 +70,15 @@ var financialAidBarVis = {
 
 var crimeBarVis = {
 	yAxisW: 20,
-	x: genderBarVis.x + 50,
-	chartX: genderBarVis.x + 50,
+	x: 0,
+	chartX: genderBarVis.x + 30,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
-	w: 450,
-	h: 300,
-	xAxisY: 10 + genderBarVis.y + 300,
+	w: 350,
+	h: 200,
+	xAxisY: 10 + genderBarVis.y + 200,
 	xAxisH: 30,
-	barWidth: 30
+	barWidth: 25
 }
 
 var school_dot_radius = 2;
@@ -105,6 +105,7 @@ var selectedSchoolObject = null;
 
 var detailified = false;
 var currentTab = 1;
+var newPage = true;
 
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
@@ -175,6 +176,13 @@ var loadStateData = function() {
 			selectedSchool = x;
 			selectedSchoolObject = data[x];
 
+			if(newPage == true) {
+				d3.select("#clickPlease")
+					.remove();
+				newPage = false;
+				tabbify();
+			}
+
 			detailify();
 		});
 
@@ -182,9 +190,7 @@ var loadStateData = function() {
 		selectedSchoolObject = data[selectedSchool];
 
 		console.log(selectedSchoolObject);
-
-		detailify();
-		tabbify();
+		
 		detailfied = true;
 	});
 };
@@ -315,7 +321,7 @@ loadMap();
 // function that creates the SVG tabs
 function tabbify() {
 	var tabBar = d3.select("#detailVis")
-		.insert("svg", "h2")
+		.insert("svg", "#canvas")
 			.attr("width", bbDetailTabs.w)
 			.attr("height", bbDetailTabs.h)
 			.attr("id", "tabBar")
@@ -337,17 +343,49 @@ function tabbify() {
 
 	var tabBar2 = tabBar.append("g")
 		.attr("id", "tabBar2");
-	tabBar1.append("rect")
+	tabBar2.append("rect")
 		.attr("x", bbDetailTabs.w/bbDetailTabs.barCount)
 		.attr("y", 0)
 		.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
 		.attr("height", bbDetailTabs.h)
 		.attr("fill", "#BBBBBB")
-	tabBar1.append("text")
+	tabBar2.append("text")
 		.attr("text-anchor", "middle")
 		.attr("x", bbDetailTabs.w/bbDetailTabs.barCount + bbDetailTabs.w/(bbDetailTabs.barCount*2))
 		.attr("y", bbDetailTabs.h/2 + 5)
 		.text("Crime Statistics");
+
+	tabBar1.on("click", function(){
+		if(currentTab != 1) {
+			d3.selectAll(".tab2")
+				.attr("opacity", "0");
+			d3.selectAll(".tab1")
+				.attr("opacity", "1");
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar1")
+				.select("svg rect")
+				.attr("fill", "#FFFFFF");
+			currentTab = 1;
+		}
+	});
+
+	tabBar2.on("click", function(){
+		if(currentTab != 2) {
+			d3.selectAll(".tab2")
+				.attr("opacity", "1");
+			d3.selectAll(".tab1")
+				.attr("opacity", "0");
+			d3.select("#tabBar1")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#FFFFFF");
+			currentTab = 2;
+		}
+	});
 }
 
 // function that generates all the detail visualizations
@@ -377,6 +415,19 @@ function detailify() {
 		svg2 = vis2.select("svg");
 		svg2.selectAll("g")
 			.remove();
+
+		// resets tabs
+		d3.selectAll(".tab2")
+				.attr("opacity", "0");
+			d3.selectAll(".tab1")
+				.attr("opacity", "1");
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar1")
+				.select("svg rect")
+				.attr("fill", "#FFFFFF");
+			currentTab = 1;
 	}
 	detailified = false;
 	tablify();

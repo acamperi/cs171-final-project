@@ -10,6 +10,13 @@ body {
 	font-family: sans-serif;
 }
 
+p {
+	font-weight: 700;
+	color: #999999;
+	-webkit-margin-before: 0pt;
+	-webkit-margin-after: 0pt;
+}
+
 /* Used for the main header*/
 h1 {
 	font-family: 'Exo', sans-serif;
@@ -38,7 +45,8 @@ h4 {
 	text-align: left;
 	color: #DDDDDD;
 	font-size: 12pt;
-	-webkit-margin-after: 0px;
+	-webkit-margin-after: 4pt;
+	-webkit-margin-before: 0pt;
 }
 
 div {
