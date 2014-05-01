@@ -36,7 +36,7 @@ var bbDetailTabs = {
 	y: 0,
 	w: 420,
 	h: 25,
-	barCount: 2
+	barCount: 3
 };
 
 var genderBarVis = {
@@ -140,6 +140,8 @@ var path = d3.geo.path().projection(projection);
 //   MAIN VISUALIZATION SETUP
 // ============================
 
+
+
 var toggleSelected = function(id) {
 	// change map visualization to reflect selected metric
 };
@@ -159,9 +161,9 @@ var loadStateData = function() {
 			else
 				c++;
 		}
-		console.log(c);
+		// console.log(c);
 
-		console.log(projections);
+		// console.log(projections);
 		mainVisFrame.append("g").selectAll(".school").data(schoolIDList).enter().append("circle")
 		.classed("school", true)
 		.attr("r", function(x) { return school_dot_radius; })
@@ -189,7 +191,7 @@ var loadStateData = function() {
 		selectedSchool = schoolIDList[0];
 		selectedSchoolObject = data[selectedSchool];
 
-		console.log(selectedSchoolObject);
+		// console.log(selectedSchoolObject);
 		
 		detailfied = true;
 	});
@@ -263,7 +265,7 @@ function move() {
 //geo translation on mouse click in map
 function click() {
   var latlon = projection.invert(d3.mouse(this));
-  console.log(latlon);
+  // console.log(latlon);
 }
 
 function clicked(d) {
@@ -318,6 +320,62 @@ loadMap();
 //   LAUNCH DETAIL VISUALIZATION
 // ===============================
 
+google.load('search', '1');
+var imageSearch;
+
+// Create an Image Search instance.
+$().ready(function() {
+	imageSearch = new google.search.ImageSearch();
+});
+
+function searchComplete(college_name) {
+
+if (selectedSchoolObject.name != college_name)
+	return;
+
+// Check that we got results
+if (imageSearch.results && imageSearch.results.length > 0) {
+
+  	// Loop through our results, printing them to the page.
+  	var results = imageSearch.results;
+  	
+	console.log(results);
+
+    // For each result write it's title and image to the screen
+    var result = results[0];
+
+    d3.select(".college_logo_link").attr("href", result.originalContextUrl);
+    d3.select(".college_logo").attr("src", result.url);
+
+    // var imgContainer = d3.select("body").append("a").attr("href", result.originalContextUrl);
+    // imgContainer.append("img").attr("width", "100").attr("align", "center").attr("src", result.url);
+  }
+}
+
+function searchForImageForCollege(college_name) {
+
+    // Set searchComplete as the callback function when a search is 
+    // complete.  The imageSearch object will have results in it.
+    imageSearch.setSearchCompleteCallback(this, searchComplete, [college_name]);
+
+    imageSearch.setRestriction(
+  		google.search.Search.RESTRICT_SAFESEARCH,
+  		google.search.Search.SAFESEARCH_STRICT
+	);
+	imageSearch.setRestriction(
+  		google.search.ImageSearch.RESTRICT_IMAGESIZE,
+  		google.search.ImageSearch.IMAGESIZE_MEDIUM
+	);
+
+    imageSearch.setResultSetSize = 1;
+    imageSearch.setNoHtmlGeneration();
+
+    imageSearch.setQueryAddition(" logo");
+
+    // Find me a beautiful college logo.
+    imageSearch.execute(college_name);
+}
+
 // function that creates the SVG tabs
 function tabbify() {
 	var tabBar = d3.select("#detailVis")
@@ -355,35 +413,92 @@ function tabbify() {
 		.attr("y", bbDetailTabs.h/2 + 5)
 		.text("Crime Statistics");
 
+	var tabBar3 = tabBar.append("g")
+		.attr("id", "tabBar3");
+	tabBar3.append("rect")
+		.attr("x", (bbDetailTabs.w/bbDetailTabs.barCount) * 2)
+		.attr("y", 0)
+		.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
+		.attr("height", bbDetailTabs.h)
+		.attr("fill", "#BBBBBB")
+	tabBar3.append("text")
+		.attr("text-anchor", "middle")
+		.attr("x", (bbDetailTabs.w/bbDetailTabs.barCount) * 2 + bbDetailTabs.w/(bbDetailTabs.barCount*2))
+		.attr("y", bbDetailTabs.h/2 + 5)
+		.text("School Comparison");
+
 	tabBar1.on("click", function(){
 		if(currentTab != 1) {
-			d3.selectAll(".tab2")
-				.attr("opacity", "0");
 			d3.selectAll(".tab1")
 				.attr("opacity", "1");
-			d3.select("#tabBar2")
-				.select("svg rect")
-				.attr("fill", "#BBBBBB");
+			d3.selectAll(".tab2")
+				.attr("opacity", "0");
+			d3.selectAll(".tab3")
+				.attr("opacity", "0");
+
 			d3.select("#tabBar1")
 				.select("svg rect")
 				.attr("fill", "#FFFFFF");
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar3")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+
+			d3.select("#dataTable").style("opacity", "1");
+
 			currentTab = 1;
 		}
 	});
 
 	tabBar2.on("click", function(){
 		if(currentTab != 2) {
-			d3.selectAll(".tab2")
-				.attr("opacity", "1");
 			d3.selectAll(".tab1")
 				.attr("opacity", "0");
+			d3.selectAll(".tab2")
+				.attr("opacity", "1");
+			d3.selectAll(".tab3")
+				.attr("opacity", "0");
+
 			d3.select("#tabBar1")
 				.select("svg rect")
 				.attr("fill", "#BBBBBB");
 			d3.select("#tabBar2")
 				.select("svg rect")
 				.attr("fill", "#FFFFFF");
+			d3.select("#tabBar3")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+
+			d3.select("#dataTable").style("opacity", "1");
+
 			currentTab = 2;
+		}
+	});
+
+	tabBar3.on("click", function(){
+		if(currentTab != 3) {
+			d3.selectAll(".tab1")
+				.attr("opacity", "0");
+			d3.selectAll(".tab2")
+				.attr("opacity", "0");
+			d3.selectAll(".tab3")
+				.attr("opacity", "1");
+
+			d3.select("#tabBar1")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar3")
+				.select("svg rect")
+				.attr("fill", "#FFFFFF");
+
+			d3.select("#dataTable").style("opacity", "0");
+
+			currentTab = 3;
 		}
 	});
 }
@@ -444,13 +559,28 @@ function tablify() {
 			.attr("class", "tab1")
 			.style("padding", "0px");
 
+
 		// adds school name
 		var name = d3.select("#detailVis")
 			.insert("h2", "#dataTable")
 			.text(schoolName);
 
-		// sets up the table based on schoolInfoBuffer
-		var table = dataTable
+		console.log(schoolInfoBuffer);
+
+		// sets up the table based on schoolInfoBuffer	
+		// var infoTableCol = dataTable;
+
+
+
+		var superTable = dataTable
+			.append("table");
+
+		var superTbody = superTable.append("tbody");
+		var superRow = superTbody.append("tr").style("background-color", "#222222");
+		var infoTableCol = superRow.append("td").style("background-color", "#222222");
+		var imgCol = superRow.append("td").style("background-color", "#222222");
+
+		var table = infoTableCol
 			.append("table");
 		var tbody = table.append("tbody");
 		var rows = tbody.selectAll("tr")
@@ -469,6 +599,11 @@ function tablify() {
 			.text(function(d){
 				return d.value;
 			});
+
+		imgCol.append("a").classed("college_logo_link", true)
+	    .append("img").attr("align", "center").classed("college_logo", true);
+
+	    searchForImageForCollege(schoolName);
 	}
 }
 
@@ -622,7 +757,7 @@ function financify() {
 	financeInfo = d3.entries(financeInfoBuffer);
 	financeInfoKeys = d3.keys(financeInfoBuffer);
 
-	console.log(financeInfoKeys);
+	// console.log(financeInfoKeys);
 
 	xScale = d3.scale.ordinal()
 		.domain(financeInfoKeys)
@@ -741,7 +876,7 @@ function crimeify() {
 	crimeInfo = d3.entries(crimeInfoBuffer);
 	crimeInfoKeys = d3.keys(crimeInfoBuffer);
 
-	console.log(crimeInfo);
+	// console.log(crimeInfo);
 
 	xScale = d3.scale.ordinal()
 		.domain(crimeInfoKeys)
