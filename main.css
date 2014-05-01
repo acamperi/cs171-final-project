@@ -129,6 +129,10 @@ td {
 	visibility : hidden;
 }
 
+.college_logo {
+	height : 110px;
+}
+
 /* styles used for all bar graphs */
 .bar {
 	fill: #CC3333;
