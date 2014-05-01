@@ -43,7 +43,10 @@
 			"raw/ic2012_ay.csv",
 			"raw/finance2010.csv",
 			"raw/finance2011.csv",
-			"raw/finance2012.csv"
+			"raw/finance2012.csv",
+			"raw/AllStateCrimes2010.csv",
+			"raw/AllStateCrimes2011.csv",
+			"raw/AllStateCrimes2012.csv"
 		];
 		_.each(files, function(f) { q.defer(d3.csv, f); });
 		q.await(function(error,
@@ -54,13 +57,20 @@
 				demographics2010, demographics2011, demographics2012,
 				finaid2010, finaid2011, finaid2012,
 				tuition2010, tuition2011, tuition2012,
-				finance2010, finance2011, finance2012
+				finance2010, finance2011, finance2012,
+				allCrime2010, allCrime2011, allCrime2012
 			) {
 
 			var institutionsData = {};
+			var statesData = {};
 
 			var parseCellToInt = function(cell) {
 				var parsed = parseInt(cell.trim());
+				return isNaN(parsed) ? 0 : parsed;
+			};
+
+			var parseCellToFloat = function(cell) {
+				var parsed = parseFloat(cell.trim());
 				return isNaN(parsed) ? 0 : parsed;
 			};
 
@@ -381,7 +391,7 @@
 						institution.demographics[cohort] /= Math.max(institution.demographics.num_data, 1);
 					else
 						for (var subcohort in institution.demographics[cohort])
-							institution.demographics[cohort][cohort] /= Math.max(institution.demographics[cohort].num_data, 1);
+							institution.demographics[cohort][subcohort] /= Math.max(institution.demographics[cohort].num_data, 1);
 				}
 
 				if (institution.finaid.num_data > 1)
@@ -398,31 +408,245 @@
 					}
 				}
 
-				setTimeout(function() {
-					var address = institution.address + ", " + institution.city + ", " + institution.state + " " + institution.zip;
-					geocoder.geocode({address: address}, function(results, status) {
-						if (status == google.maps.GeocoderStatus.OK) {
-							institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
-							num_positive_responses++;
-						}
-						console.log("got response from google maps, positive = " + (status == google.maps.GeocoderStatus.OK));
-						times_queried_maps_api++;
-					});
-				}, index * 5000);
+				// setTimeout(function() {
+				// 	var address = institution.address + ", " + institution.city + ", " + institution.state + " " + institution.zip;
+				// 	geocoder.geocode({address: address}, function(results, status) {
+				// 		if (status == google.maps.GeocoderStatus.OK) {
+				// 			institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
+				// 			num_positive_responses++;
+				// 		}
+				// 		console.log("got response from google maps, positive = " + (status == google.maps.GeocoderStatus.OK));
+				// 		times_queried_maps_api++;
+				// 	});
+				// }, index * 5000);
 
 				index++;
 			});
 
-			setTimeout(function() {
-				if (times_queried_maps_api < num_institutions)
-					return;
+			// setTimeout(function() {
+			// 	if (times_queried_maps_api < num_institutions)
+			// 		return;
 
-				console.log("num institutions = " + num_institutions + "; num positive responses = " + num_positive_responses);
-				console.log(institutionsData);
-				saveToFile(institutionsData, "institutionsData101112.json");
+			// 	console.log("num institutions = " + num_institutions + "; num positive responses = " + num_positive_responses);
+			// 	console.log(institutionsData);
+			// 	saveToFile(institutionsData, "institutionsData101112.json");
+			// }, 50000000);
 
-				var statesData = [];
-			}, 50000000);
+			console.log("finished processing institutions data, starting compiling state data");
+
+			_.each(institutionsData, function(institution) {
+				var code = institution.state;
+				if (statesData[code] === undefined) {
+					statesData[code] = {
+						code: code,
+						endowment_assets: 0,
+						endowment_num_data: 0,
+						general_crime: {
+							total: 0,
+							violent_crime: 0,
+							murder_nonnegligent_manslaughter: 0,
+							forcible_rape: 0,
+							robbery: 0,
+							aggravated_assault: 0,
+							property_crime: 0,
+							burglary: 0,
+							larceny: 0,
+							motor_vehicle_theft: 0
+						},
+						college_crime: {
+							num_data: 0,
+							total: 0,
+							murder: 0,
+							negligent_manslaughter: 0,
+							forcible_sex_offense: 0,
+							nonforcible_sex_offense: 0,
+							robbery: 0,
+							aggravated_assault: 0,
+							burglary: 0,
+							motor_vehicle_theft: 0,
+							arson: 0
+						},
+						demographics: {
+							num_data: 0,
+							total: 0, total_men: 0, total_women: 0,
+							american_indian_alaska_native_total: 0, american_indian_alaska_native_men: 0, american_indian_alaska_native_women: 0,
+							asian_total: 0, asian_men: 0, asian_women: 0,
+							black_african_american_total: 0, black_african_american_men: 0, black_african_american_women: 0,
+							hispanic_latino_total: 0, hispanic_latino_men: 0, hispanic_latino_women: 0,
+							native_hawaiian_other_pacific_islander_total: 0, native_hawaiian_other_pacific_islander_men: 0, native_hawaiian_other_pacific_islander_women: 0,
+							white_total: 0, white_men: 0, white_women: 0,
+							two_plus_races_total: 0, two_plus_races_men: 0, two_plus_races_women: 0,
+							unknown_total: 0, unknown_men: 0, unknown_women: 0,
+							nonresident_alien_total: 0, nonresident_alien_men: 0, nonresident_alien_women: 0
+						},
+						finaid: {
+							num_data: 0,
+							average: 0,
+							income_0_30000: 0,
+							income_30001_48000: 0,
+							income_48001_75000: 0,
+							income_75001_110000: 0,
+							income_110001_more: 0
+						},
+						tuition: {
+							num_data: 0,
+							average: 0, in_state: 0, out_of_state: 0,
+							undergrad: {
+								average: 0, in_state: 0, out_of_state: 0
+							},
+							grad: {
+								average: 0, in_state: 0, out_of_state: 0
+							}
+						}
+					};
+
+					_.each(["non_campus", "on_campus", "public_property", "residence_hall"], function(type) {
+						statesData[code].college_crime[type] = {
+							num_data: 0,
+							total: 0,
+							murder: 0,
+							negligent_manslaughter: 0,
+							forcible_sex_offense: 0,
+							nonforcible_sex_offense: 0,
+							robbery: 0,
+							aggravated_assault: 0,
+							burglary: 0,
+							motor_vehicle_theft: 0,
+							arson: 0
+						};
+					});
+
+					_.each(["undergrad", "grad"], function(level) {
+						statesData[code].demographics[level] = {
+							num_data: 0,
+							total: 0, total_men: 0, total_women: 0,
+							american_indian_alaska_native_total: 0, american_indian_alaska_native_men: 0, american_indian_alaska_native_women: 0,
+							asian_total: 0, asian_men: 0, asian_women: 0,
+							black_african_american_total: 0, black_african_american_men: 0, black_african_american_women: 0,
+							hispanic_latino_total: 0, hispanic_latino_men: 0, hispanic_latino_women: 0,
+							native_hawaiian_other_pacific_islander_total: 0, native_hawaiian_other_pacific_islander_men: 0, native_hawaiian_other_pacific_islander_women: 0,
+							white_total: 0, white_men: 0, white_women: 0,
+							two_plus_races_total: 0, two_plus_races_men: 0, two_plus_races_women: 0,
+							unknown_total: 0, unknown_men: 0, unknown_women: 0,
+							nonresident_alien_total: 0, nonresident_alien_men: 0, nonresident_alien_women: 0
+						};
+					});
+				}
+
+				if (institution.endowment_num_data > 0) {
+					statesData[code].endowment_assets +=  institution.endowment_assets;
+					statesData[code].endowment_num_data++;
+				}
+
+				if (institution.crime.num_data > 0) {
+					for (var type in institution.crime) {
+						if (!_.isObject(institution.crime[type]))
+								statesData[code].college_crime[type] += institution.crime[type];
+						else if (institution.crime[type].num_data > 0) {
+							for (var subtype in institution.crime[type])
+								statesData[code].college_crime[type][subtype] += institution.crime[type][subtype];
+							statesData[code].college_crime[type].num_data++;
+						}
+					}
+					statesData[code].college_crime.num_data++;
+				}
+
+				if (institution.demographics.num_data > 0) {
+					for (var cohort in institution.demographics) {
+						if (!_.isObject(institution.demographics[cohort]))
+							statesData[code].demographics[cohort] += institution.demographics[cohort];
+						else if (institution.demographics[cohort].num_data > 0) {
+							for (var subcohort in institution.demographics[cohort])
+								statesData[code].demographics[cohort][subcohort] += institution.demographics[cohort][subcohort];
+							statesData[code].demographics[cohort].num_data++;
+						}
+					}
+					statesData[code].demographics.num_data++;
+				}
+
+				if (institution.finaid.num_data > 0) {
+					for (var income_level in institution.finaid)
+						statesData[code].finaid[income_level] += institution.finaid[income_level];
+					statesData[code].finaid.num_data++;
+				}
+
+				if (institution.tuition.num_data > 0) {
+					for (var group in institution.tuition) {
+						if (!_.isObject(institution.tuition[group]))
+							institution.tuition[group] /= institution.tuition.num_data;
+						else
+							for (var subgroup in institution.tuition[group])
+								institution.tuition[group][subgroup] /= institution.tuition.num_data;
+					}
+					statesData[code].tuition.num_data++;
+				}
+			});
+
+			console.log("finished compiling institution data into states, starting on general crime");
+
+			var crime_keys = ["violent_crime", "murder_nonnegligent_manslaughter", "forcible_rape", "robbery", "aggravated_assault", "property_crime", "burglary", "larceny", "motor_vehicle_theft"];
+			_.each([allCrime2010, allCrime2011, allCrime2012], function(crimeData) {
+				_.each(crimeData, function(row) {
+					var code = row["State"];
+					if (statesData[code] !== undefined) {
+						statesData[code].general_crime.violent_crime += parseCellToFloat(row["Violent Crime rate"]);
+						statesData[code].general_crime.murder_nonnegligent_manslaughter += parseCellToFloat(row["Murder and nonnegligent manslaughter rate"]);
+						statesData[code].general_crime.forcible_rape += parseCellToFloat(row["Forcible rape rate"]);
+						statesData[code].general_crime.robbery += parseCellToFloat(row["Robbery rate"]);
+						statesData[code].general_crime.aggravated_assault += parseCellToFloat(row["Aggravated assault rate"]);
+						statesData[code].general_crime.property_crime += parseCellToFloat(row["Property crime rate"]);
+						statesData[code].general_crime.burglary += parseCellToFloat(row["Burglary rate"]);
+						statesData[code].general_crime.larceny += parseCellToFloat(row["Larceny-theft rate"]);
+						statesData[code].general_crime.motor_vehicle_theft += parseCellToFloat(row["Motor vehicle theft rate"]);
+						statesData[code].general_crime.total += _.reduce(crime_keys, function(prev, curr) { return prev + statesData[code].general_crime[curr]; }, 0);
+					}
+				});
+			});
+
+			console.log("finished compiling general crime data for states, starting on computing averages");
+
+			_.each(statesData, function(state) {
+				if (state.endowment_num_data > 1)
+					state.endowment_assets /= state.endowment_num_data;
+
+				for (var type in state.college_crime) {
+					if (!_.isObject(state.college_crime[type]))
+						state.college_crime[type] /= Math.max(state.college_crime.num_data, 1);
+					else
+						for (var subtype in state.college_crime[type])
+							state.college_crime[type][subtype] /= Math.max(state.college_crime[type].num_data, 1);
+				}
+
+				for (var cohort in state.demographics) {
+					if (!_.isObject(state.demographics[cohort]))
+						state.demographics[cohort] /= Math.max(state.demographics.num_data, 1);
+					else
+						for (var subcohort in state.demographics[cohort])
+							state.demographics[cohort][subcohort] /= Math.max(state.demographics[cohort].num_data, 1);
+				}
+
+				if (state.finaid.num_data > 1)
+					for (var income_level in state.finaid)
+						state.finaid[income_level] /= state.finaid.num_data;
+
+				if (state.tuition.num_data > 1) {
+					for (var group in state.tuition) {
+						if (!_.isObject(state.tuition[group]))
+							state.tuition[group] /= state.tuition.num_data;
+						else
+							for (var subgroup in state.tuition[group])
+								state.tuition[group][subgroup] /= state.tuition.num_data;
+					}
+				}
+
+				for (var crime in state.general_crime)
+					state.general_crime[crime] /= 3;
+			});
+
+			console.log("fnished computing averages, logging and outputting states data file");
+
+			console.log(statesData);
+			saveToFile(statesData, "statesData101112.json");
 			
 		});
 
