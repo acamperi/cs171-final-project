@@ -107,6 +107,14 @@ var detailified = false;
 var currentTab = 1;
 var newPage = true;
 
+// borrowed from http://exoboy.wordpress.com/2011/07/14/the-problems-with-tofixed-in-javascript/
+Number.prototype.trimNum = function(places,rounding){
+(rounding != 'floor' && rounding != 'ceil') ? rounding = 'round' : rounding = rounding;
+var result, num = this, multiplier = Math.pow( 10,places );
+result = Math[rounding](num * multiplier) / multiplier;
+return Number( result );
+}
+
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
 // ==============================
@@ -532,14 +540,14 @@ function genderize() {
 			.attr("y", genderBarVis.y + genderBarVis.barheight + 20)
 			.attr("text-anchor", "start")
 			.attr("class", "detailVisDetailText")
-			.text(100 * mPercent.toFixed(4) + "% M");
+			.text(100 * Math.round(10000 * parseFloat(mPercent))/10000 + "% M");
 
 		var femaleText = genderBars.append("text")
 			.attr("x", genderBarVis.x + genderBarVis.w)
 			.attr("y", genderBarVis.y + genderBarVis.barheight + 20)
 			.attr("text-anchor", "end")
 			.attr("class", "detailVisDetailText")
-			.text(100 * fPercent.toFixed(4) + "% F");
+			.text(100 * Math.round(10000 * parseFloat(fPercent))/10000 + "% F");
 	}
 }
 
@@ -557,6 +565,25 @@ function pieBaker() {
 	raceInfoBuffer["American Indian/Alaska Native"] = parseInt(selectedSchoolObject["demographics"]["american_indian_alaska_native_total"]);
 	raceInfoBuffer["Multiracial"] = parseInt(selectedSchoolObject["demographics"]["two_plus_races_total"]);
 	raceInfoBuffer["International"] = parseInt(selectedSchoolObject["demographics"]["nonresident_alien_total"]);
+
+	raceProportionsBuffer = {};
+	var totalPop = 
+		raceInfoBuffer["Black/African-American"] +
+		raceInfoBuffer["Asian"] +
+		raceInfoBuffer["White"] +
+		raceInfoBuffer["Hispanic/Latinx"] +
+		raceInfoBuffer["Native Hawaiian/Other Pacific Islander"] +
+		raceInfoBuffer["American Indian/Alaska Native"] +
+		raceInfoBuffer["Multiracial"] +
+		raceInfoBuffer["International"];
+	raceProportionsBuffer["Black/African-American"] = raceInfoBuffer["Black/African-American"]/totalPop;
+	raceProportionsBuffer["Asian"] = raceInfoBuffer["Asian"]/totalPop;
+	raceProportionsBuffer["White"] = raceInfoBuffer["White"]/totalPop;
+	raceProportionsBuffer["Hispanic/Latinx"] = raceInfoBuffer["Hispanic/Latinx"]/totalPop;
+	raceProportionsBuffer["Native Hawaiian/Other Pacific Islander"] = raceInfoBuffer["Native Hawaiian/Other Pacific Islander"]/totalPop;
+	raceProportionsBuffer["American Indian/Alaska Native"] = raceInfoBuffer["American Indian/Alaska Native"]/totalPop;
+	raceProportionsBuffer["Multiracial"] = raceInfoBuffer["Multiracial"]/totalPop;
+	raceProportionsBuffer["International"] = raceInfoBuffer["International"]/totalPop;
 
 	// selects the canvas on which to bake the pie
     var racePie = d3.select("#detailVis")
@@ -597,19 +624,52 @@ function pieBaker() {
             .attr("fill", function(d, i) { return pieColor(i); } ) //set the color for each slice to be chosen from the color function defined above
             .attr("d", arc);                                    //this creates the actual SVG path using the associated data (pie) with the arc drawing function
  
-        arcs.append("svg:text")                                     //add a label to each slice
-                .attr("transform", function(d) {                    //set the label's origin to the center of the arc
-                //we have to make sure to set these before calling arc.centroid
-                d.innerRadius = 0;
-                d.outerRadius = racePieVis.r;
-                return "translate(" + arc.centroid(d) + ")";        //this gives us a pair of coordinates like [50, 50]
-            })
-            .attr("text-anchor", "middle")                          //center the text on it's origin
-            .attr("class", "pieText")
-            .text(function(d, i) { 
-            	entries = d3.entries(raceInfoBuffer);
-            	return entries[i]["key"]; 
-            });        //get the label from our original data array
+    var raceNames = d3.keys(raceInfoBuffer);
+
+    var racePercents = racePie.selectAll("text.raceText")
+    	.data(d3.entries(raceProportionsBuffer))
+    	.enter()
+    	.append("text")
+    	.attr("x", 38 + racePieVis.x)
+        .attr("y", function(d,i) {
+        	return racePieVis.h + 15 + racePieVis.y + (10 * (i + 1));
+        })
+        .attr("text-anchor", "end")
+        .attr("class", "raceText")
+        .text(function(d, i) { 
+        	return 100 * Math.round(10000 * parseFloat(d.value))/10000 + "%"; 
+        });
+
+    var raceBoxes = racePie.selectAll("rect")
+    	.data(raceNames)
+    	.enter()
+		.append("rect")
+    	.attr("width", "10px")
+    	.attr("height", "10px")
+    	.attr("x", 40 + racePieVis.x)
+        .attr("y", function(d,i) {
+        	return racePieVis.h + 15 + racePieVis.y + (10 * i);
+        })
+        .attr("fill", function(d,i) {
+        	return pieColor(i);
+        })
+        .attr("label", function(d, i) { 
+        	return d; 
+        });
+
+    var raceLabels = racePie.selectAll("text.pieText")
+    	.data(raceNames)
+    	.enter()
+    	.append("text")                                     //add a label to each slice
+        .attr("x", 54 + racePieVis.x)
+        .attr("y", function(d,i) {
+        	return racePieVis.h + 15 + racePieVis.y + (10 * (i + 1));
+        })
+        .attr("text-anchor", "left")                          //center the text on it's origin
+        .attr("class", "pieText")
+        .text(function(d, i) { 
+        	return d; 
+        });        //get the label from our original data array
 
 
 
