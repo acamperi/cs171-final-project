@@ -630,7 +630,7 @@ function pieBaker() {
     	.data(d3.entries(raceProportionsBuffer))
     	.enter()
     	.append("text")
-    	.attr("x", 38 + racePieVis.x)
+    	.attr("x", 38 + racePieVis.x + 10)
         .attr("y", function(d,i) {
         	return racePieVis.h + 15 + racePieVis.y + (10 * (i + 1));
         })
@@ -646,7 +646,7 @@ function pieBaker() {
 		.append("rect")
     	.attr("width", "10px")
     	.attr("height", "10px")
-    	.attr("x", 40 + racePieVis.x)
+    	.attr("x", 40 + racePieVis.x + 10)
         .attr("y", function(d,i) {
         	return racePieVis.h + 15 + racePieVis.y + (10 * i);
         })
@@ -661,7 +661,7 @@ function pieBaker() {
     	.data(raceNames)
     	.enter()
     	.append("text")                                     //add a label to each slice
-        .attr("x", 54 + racePieVis.x)
+        .attr("x", 54 + racePieVis.x + 10)
         .attr("y", function(d,i) {
         	return racePieVis.h + 15 + racePieVis.y + (10 * (i + 1));
         })

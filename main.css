@@ -96,7 +96,7 @@ td {
 .thisSchool {
 	stroke-width: 3px;
 	fill: #CC3333;
-	stroke: #AA3333;
+	stroke: #FF3333;
 }
 
 /* styles used for all detailVis */
@@ -150,6 +150,8 @@ td {
 
 .raceText,
 .pieText {
+	font-family: 'Roboto Slab', serif;
+	font-weight: 400;
 	font-size: 8pt;
 	fill: #FFFFFF;
 }
@@ -166,7 +168,7 @@ td {
 {
 	fill: #FFFFFF;
 	font-family: 'Roboto Slab', serif;
-	font-weight: 200;
+	font-weight: 400;
 	font-size: 8pt;
 }
 
