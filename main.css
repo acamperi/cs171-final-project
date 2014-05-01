@@ -93,6 +93,11 @@ td {
 	fill: #CCCCCC;
 	stroke: #FFFFFF;
 }
+.thisSchool {
+	stroke-width: 3px;
+	fill: #CC3333;
+	stroke: #AA3333;
+}
 
 /* styles used for all detailVis */
 #detailVis {

@@ -28,7 +28,7 @@ var bbDetailVis = {
 	x: 0,
 	y: 0,
 	w: 420 - detailVisMargin.left - detailVisMargin.right,
-	h: 300 - detailVisMargin.top - detailVisMargin.bottom
+	h: 380 - detailVisMargin.top - detailVisMargin.bottom
 };
 
 var bbDetailTabs = {
@@ -184,6 +184,12 @@ var loadStateData = function() {
 			}
 
 			detailify();
+
+			d3.selectAll(".thisSchool")
+				.attr("class", "school");
+
+			d3.select(this)
+				.attr("class", "thisSchool");
 		});
 
 		selectedSchool = schoolIDList[0];
@@ -258,6 +264,7 @@ function move() {
 	//adjust the state hover stroke width based on zoom level
 	d3.selectAll(".state").style("stroke-width", 1 / s);
 	d3.selectAll(".school").attr("r", school_dot_radius / s);
+	d3.selectAll(".thisSchool").attr("r", school_dot_radius / s);
 }
 
 //geo translation on mouse click in map
@@ -300,6 +307,7 @@ function clicked(d) {
   
   	d3.selectAll(".state").transition().duration(750).style("stroke-width", 1 / k);
   	d3.selectAll(".school").transition().duration(750).attr("r", school_dot_radius / k);
+  	d3.selectAll(".thisSchool").transition().duration(750).attr("r", school_dot_radius / k);
 }
 
 // ===============================
@@ -435,7 +443,7 @@ function tablify() {
 		schoolInfoBuffer = {};
 		schoolInfoBuffer["Street Address"] = selectedSchoolObject["address"];
 		schoolInfoBuffer["City, State, Zip Code"] = selectedSchoolObject["city"] + ", " + selectedSchoolObject["state"] + " " + selectedSchoolObject["zip"];
-		schoolInfoBuffer["Total Assets"] = selectedSchoolObject["endowment_assets"];
+		// schoolInfoBuffer["Total Assets"] = selectedSchoolObject["endowment_assets"];
 		schoolInfoBuffer["Enrollment"] = selectedSchoolObject["demographics"]["total"];
 
 		var dataTable = d3.select("#detailVis")
