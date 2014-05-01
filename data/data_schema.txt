@@ -130,7 +130,7 @@ id: {
 
 statesData101112.json:
 ======================
-{
+code: {
 	code,
 	endowment_assets,
 	general_crime: {
