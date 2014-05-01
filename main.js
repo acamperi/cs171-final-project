@@ -53,7 +53,7 @@ var racePieVis = {
 	w: 140,		//width
 	h: 140,		//height
 	r: 70		//radius
-}
+};
 
 var financialAidBarVis = {
 	yAxisW: 20,
@@ -66,7 +66,7 @@ var financialAidBarVis = {
 	xAxisY: 10 + genderBarVis.y + 200,
 	xAxisH: 30,
 	barWidth: 15
-}
+};
 
 var crimeBarVis = {
 	yAxisW: 20,
@@ -79,7 +79,7 @@ var crimeBarVis = {
 	xAxisY: 10 + genderBarVis.y + 200,
 	xAxisH: 30,
 	barWidth: 25
-}
+};
 
 var school_dot_radius = 1;
 var zscale = 1;
@@ -106,14 +106,6 @@ var selectedSchoolObject = null;
 var detailified = false;
 var currentTab = 1;
 var newPage = true;
-
-// borrowed from http://exoboy.wordpress.com/2011/07/14/the-problems-with-tofixed-in-javascript/
-Number.prototype.trimNum = function(places,rounding){
-(rounding != 'floor' && rounding != 'ceil') ? rounding = 'round' : rounding = rounding;
-var result, num = this, multiplier = Math.pow( 10,places );
-result = Math[rounding](num * multiplier) / multiplier;
-return Number( result );
-}
 
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
@@ -147,8 +139,6 @@ var path = d3.geo.path().projection(projection);
 // ============================
 //   MAIN VISUALIZATION SETUP
 // ============================
-
-
 
 var toggleSelected = function(id) {
 	// change map visualization to reflect selected metric
@@ -192,25 +182,81 @@ var loadStateData = function() {
 			}
 
 			detailify();
-
-			d3.selectAll(".thisSchool")
-				.attr("class", "school");
-
-			d3.select(this)
-				.attr("class", "thisSchool");
-
-			console.log(data[selectedSchool]);
 		});
-
-		selectedSchool = schoolIDList[0];
-		selectedSchoolObject = data[selectedSchool];
-		
-		detailfied = true;
 	});
+}
+
+var loadStateAndInstitutionData = function() {
+	d3.json("data/statesData101112.json", function(error, statesData) {
+		var collegeCrimeScale = d3.scale.linear()
+			.interpolate(d3.interpolateRgb)
+			.range(["#444444", "#cc3333"])
+			.domain(d3.extent(_.values(statesData), function(d) {
+				return d.college_crime.total;
+			}));
+		mainVisFrame.selectAll(".state")
+			.style("fill", function(d) {
+				var total = statesData[d.properties.code].college_crime.total;
+				return collegeCrimeScale(total);
+			});
+
+		d3.json("data/institutionsData101112.json", function(error, data) {
+			var projections = [];
+			var schoolIDList = [];
+			var c = 0;
+			for (var schoolID in data)
+			{
+				var computed_projection = projection(data[schoolID]["lonlat"]);
+				if (computed_projection !== null) {
+					schoolIDList.push(schoolID);
+					projections.push(computed_projection);
+				}
+				else
+					c++;
+			}
+			// console.log(c);
+
+			// console.log(projections);
+			mainVisFrame.append("g").selectAll(".school").data(schoolIDList).enter().append("circle")
+			.classed("school", true)
+			.attr("r", function(x) { return school_dot_radius; })
+			.attr("cx", function(_, i) {return projections[i][0];})
+			.attr("cy", function(_, i) {return projections[i][1];})
+			.on("mouseover", function(x){return tooltip.style("visibility", "visible").text(function(){
+				return data[x]["name"];
+				});})
+			.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+			.on("mouseout", function(){return tooltip.style("visibility", "hidden");})
+			.on("click", function(x){
+				selectedSchool = x;
+				selectedSchoolObject = data[x];
+
+				if (newPage === true) {
+					d3.select("#clickPlease")
+						.remove();
+					newPage = false;
+					tabbify();
+				}
+
+				detailify();
+
+				d3.selectAll(".thisSchool")
+					.attr("class", "school");
+
+				d3.select(this)
+					.attr("class", "thisSchool");
+			});
+
+			selectedSchool = schoolIDList[0];
+			selectedSchoolObject = data[selectedSchool];
+		
+			detailfied = true;
+			});
+		});
 };
 
 var loadMap = function() {
-	d3.json("../data/us-named.json", function(error, data) {
+	d3.json("data/us-named.json", function(error, data) {
 	    var usMap = topojson.feature(data,data.objects.states).features;
 
 		// make map here, for now just draw without setting color for states
@@ -220,7 +266,7 @@ var loadMap = function() {
 	    states.enter()
 	        .append("path")
 	        .attr("d", path)
-	        .attr("title", function(d,i) { return d.properties.name; });
+	        .attr("title", function(d,i) { return d.properties.code; });
 
 	    states.attr("class", "state")
 	    	.attr("stroke", "white")
@@ -242,7 +288,7 @@ var loadMap = function() {
 		//   	}); 
 
 		// load in actual data
-		loadStateData();
+		loadStateAndInstitutionData();
 	});
 };
 
@@ -431,7 +477,7 @@ function tabbify() {
 		.attr("y", 0)
 		.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
 		.attr("height", bbDetailTabs.h)
-		.attr("fill", "#BBBBBB")
+		.attr("fill", "#BBBBBB");
 	tabBar3.append("text")
 		.attr("text-anchor", "middle")
 		.attr("x", (bbDetailTabs.w/bbDetailTabs.barCount) * 2 + bbDetailTabs.w/(bbDetailTabs.barCount*2))
@@ -516,7 +562,7 @@ function tabbify() {
 
 // function that generates all the detail visualizations
 function detailify() {
-	if (detailified = true) {
+	if (detailified === true) {
 		// selects visualization
 		vis1 = d3.select("#detailVis");
 
@@ -554,7 +600,7 @@ function detailify() {
 
 // function for creating an info table
 function tablify() {
-	if (selectedSchoolObject != null) {
+	if (selectedSchoolObject !== null) {
 		// collecting only pertinent data from the selectedSchoolObject
 		schoolName = selectedSchoolObject["name"];
 		// schoolBranch = selectedSchoolObject["branch"];
@@ -619,7 +665,7 @@ function genderize() {
 
 	var genderScale = d3.scale.linear().domain([0, 1]).range([0, genderBarVis.w]);
 
-	if (selectedSchoolObject != null) {
+	if (selectedSchoolObject !== null) {
 		var males = parseInt(selectedSchoolObject["demographics"]["total_men"]);
 		var females = parseInt(selectedSchoolObject["demographics"]["total_women"]);
 		var total = parseInt(selectedSchoolObject["demographics"]["total"]);
@@ -885,8 +931,8 @@ function financify() {
             .attr("dx", "-.8em")
             .attr("dy", ".15em")
             .attr("transform", function(d) {
-                return "rotate(-65)" 
-                });
+                return "rotate(-65)" ;
+            });
 
     financialAidBars.append("g")
         .attr("class", "axis")
@@ -1010,8 +1056,8 @@ function crimeify() {
             .attr("dx", "-.8em")
             .attr("dy", ".15em")
             .attr("transform", function(d) {
-                return "rotate(-65)" 
-                });
+                return "rotate(-65)" ;
+            });
 
     crimeBars.append("g")
         .attr("class", "axis")
