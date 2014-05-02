@@ -57,8 +57,8 @@ var racePieVis = {
 
 var financialAidBarVis = {
 	yAxisW: 20,
-	x: genderBarVis.x + genderBarVis.w + 60,
-	chartX: 40 + genderBarVis.x + genderBarVis.w + 60,
+	x: genderBarVis.x + genderBarVis.w + 70,
+	chartX: 40 + genderBarVis.x + genderBarVis.w + 70,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
 	w: 150,
@@ -987,11 +987,11 @@ function financify() {
     financialAidBars.append("g")
         .attr("class", "axis")
         .attr("id", "financialYAxis")
-        .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
+        .attr("transform", "translate(" + (financialAidBarVis.chartX) + "," + financialAidBarVis.chartY +")")
         .call(fBYAxis)
         .append("text")
 	        .attr("transform", "rotate(-90)")
-	        .attr("y", -60)
+	        .attr("y", -70)
 	        .attr("x", -financialAidBarVis.h/2)
 	        .attr("dy", "1em")
 	        .style("text-anchor", "middle")
