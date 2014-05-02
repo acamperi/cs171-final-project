@@ -106,6 +106,8 @@ var centered;
 var selectedSchool = null;
 var selectedSchoolObject = null;
 
+var selectedStateName = null;
+
 var detailified = false;
 var currentTab = 1;
 var newPage = true;
@@ -235,10 +237,7 @@ var loadInstitutionData = function() {
 				.attr("class", "thisSchool");
 		});
 
-		selectedSchool = schoolIDList[0];
 		selectedSchoolObject = data[selectedSchool];
-	
-		detailfied = true;
 	});
 };
 
@@ -261,6 +260,7 @@ var loadMap = function() {
 	    	.on("dblclick", clicked)
 	    	.on("click", function(d, i){
 	    		selectedState = d.properties.code;
+	    		selectedStateName = d.properties.name;
 	    		loadStateData();
 	    	});
 	    	
@@ -281,6 +281,7 @@ var loadMap = function() {
 		//   	}); 
 
 		// load in actual data
+		loadStateData();
 		loadInstitutionData();
 	});
 };
@@ -433,9 +434,13 @@ function searchForImageForCollege(college_name) {
 // function that creates the SVG tabs
 function tabbify() {
 
-		// removes table
-		d3.select("#detailVis").select("#tabBar")
-			.remove();
+	// removes table
+	d3.select("#detailVis").select("#tabBar")
+		.remove();
+
+	if (statetab == 1 && currentTab == 3) {
+		currentTab = 1;
+	}
 
 	var tabBar = d3.select("#detailVis")
 		.insert("svg", "#canvas")
@@ -471,7 +476,7 @@ function tabbify() {
 		.attr("y", 0)
 		.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
 		.attr("height", bbDetailTabs.h)
-		.attr("fill", "#BBBBBB")
+		.attr("fill", "#FFFFFF")
 	tabBar2.append("text")
 		.attr("text-anchor", "middle")
 		.attr("x", bbDetailTabs.w/bbDetailTabs.barCount + bbDetailTabs.w/(bbDetailTabs.barCount*2))
@@ -479,7 +484,6 @@ function tabbify() {
 		.text("Crime Statistics");
 
 	if (statetab == 0) {
-
 		var tabBar3 = tabBar.append("g")
 			.attr("id", "tabBar3");
 		tabBar3.append("rect")
@@ -487,13 +491,47 @@ function tabbify() {
 			.attr("y", 0)
 			.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
 			.attr("height", bbDetailTabs.h)
-			.attr("fill", "#BBBBBB");
+			.attr("fill", "#FFFFFF");
 		tabBar3.append("text")
 			.attr("text-anchor", "middle")
 			.attr("x", (bbDetailTabs.w/bbDetailTabs.barCount) * 2 + bbDetailTabs.w/(bbDetailTabs.barCount*2))
 			.attr("y", bbDetailTabs.h/2 + 5)
 			.text("School Comparison");
+	}
 
+	if (currentTab == 1) {
+		d3.select("#tabBar2")
+			.select("svg rect")
+			.attr("fill", "#BBBBBB");
+		d3.select("#tabBar3")
+			.select("svg rect")
+			.attr("fill", "#BBBBBB");
+	}
+	else if (currentTab == 2) {
+		d3.select("#tabBar1")
+			.select("svg rect")
+			.attr("fill", "#BBBBBB");
+		d3.select("#tabBar3")
+			.select("svg rect")
+			.attr("fill", "#BBBBBB");
+	}
+	else if (currentTab == 3) {
+		if (statetab == 0) {
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar3")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+		}
+		else if (statetab == 1) {
+			d3.select("#tabBar1")
+				.select("svg rect")
+				.attr("fill", "#FFFFFF");
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+		}
 	}
 
 	tabBar1.on("click", function(){
@@ -668,9 +706,16 @@ function tablify() {
 			.style("padding", "0px");
 
 		// adds school name
-		var name = d3.select("#detailVis")
-			.insert("h2", "#dataTable")
-			.text(schoolName);
+		if (statetab == 0) {
+			var name = d3.select("#detailVis")
+				.insert("h2", "#dataTable")
+				.text(schoolName);
+		}
+		else if (statetab == 1) {
+			var name = d3.select("#detailVis")
+				.insert("h2", "#dataTable")
+				.text(selectedStateName);
+		}
 
 		// sets up the table based on schoolInfoBuffer	
 		// var infoTableCol = dataTable;
