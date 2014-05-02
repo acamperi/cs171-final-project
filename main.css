@@ -4,10 +4,13 @@
 
 html {
 	background-color: #222222;
+	font-family: 'Exo', sans-serif;
+	height: 100%;
 }
 
 body {
-	font-family: sans-serif;
+	font-family: 'Exo', sans-serif;
+	height: 100%;
 }
 
 p {
@@ -15,6 +18,33 @@ p {
 	color: #999999;
 	-webkit-margin-before: 0pt;
 	-webkit-margin-after: 0pt;
+}
+
+footer {
+	display: inline-block;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 10px;
+}
+
+ul	{
+	margin: 0px;
+	-webkit-padding-start: 0px;
+}
+
+li {
+	display: inline-block;
+	list-style-type: none;
+	background: #BBBBBB;
+}
+
+a {
+	display: block;
+	padding: 5px;
+}
+
+li a:hover {
+	background: #FFFFFF;
 }
 
 /* Used for the main header*/

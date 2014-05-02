@@ -667,7 +667,6 @@ function tablify() {
 			.attr("class", "tab1")
 			.style("padding", "0px");
 
-
 		// adds school name
 		var name = d3.select("#detailVis")
 			.insert("h2", "#dataTable")
@@ -786,8 +785,8 @@ function pieBaker() {
     raceInfoBuffer["Hispanic/Latinx"] = parseInt(selectedSchoolObject["demographics"]["hispanic_latino_total"]);
     raceInfoBuffer["Native Hawaiian/Other Pacific Islander"] = parseInt(selectedSchoolObject["demographics"]["native_hawaiian_other_pacific_islander_total"]);
 	raceInfoBuffer["American Indian/Alaska Native"] = parseInt(selectedSchoolObject["demographics"]["american_indian_alaska_native_total"]);
-	raceInfoBuffer["Multiracial"] = parseInt(selectedSchoolObject["demographics"]["two_plus_races_total"]);
-	raceInfoBuffer["International"] = parseInt(selectedSchoolObject["demographics"]["nonresident_alien_total"]);
+	// raceInfoBuffer["Multiracial"] = parseInt(selectedSchoolObject["demographics"]["two_plus_races_total"]);
+	// raceInfoBuffer["International"] = parseInt(selectedSchoolObject["demographics"]["nonresident_alien_total"]);
 
 	raceProportionsBuffer = {};
 	var totalPop = 
@@ -796,17 +795,17 @@ function pieBaker() {
 		raceInfoBuffer["White"] +
 		raceInfoBuffer["Hispanic/Latinx"] +
 		raceInfoBuffer["Native Hawaiian/Other Pacific Islander"] +
-		raceInfoBuffer["American Indian/Alaska Native"] +
-		raceInfoBuffer["Multiracial"] +
-		raceInfoBuffer["International"];
+		raceInfoBuffer["American Indian/Alaska Native"];
+		// raceInfoBuffer["Multiracial"] +
+		// raceInfoBuffer["International"];
 	raceProportionsBuffer["Black/African-American"] = raceInfoBuffer["Black/African-American"]/totalPop;
 	raceProportionsBuffer["Asian"] = raceInfoBuffer["Asian"]/totalPop;
 	raceProportionsBuffer["White"] = raceInfoBuffer["White"]/totalPop;
 	raceProportionsBuffer["Hispanic/Latinx"] = raceInfoBuffer["Hispanic/Latinx"]/totalPop;
 	raceProportionsBuffer["Native Hawaiian/Other Pacific Islander"] = raceInfoBuffer["Native Hawaiian/Other Pacific Islander"]/totalPop;
 	raceProportionsBuffer["American Indian/Alaska Native"] = raceInfoBuffer["American Indian/Alaska Native"]/totalPop;
-	raceProportionsBuffer["Multiracial"] = raceInfoBuffer["Multiracial"]/totalPop;
-	raceProportionsBuffer["International"] = raceInfoBuffer["International"]/totalPop;
+	// raceProportionsBuffer["Multiracial"] = raceInfoBuffer["Multiracial"]/totalPop;
+	// raceProportionsBuffer["International"] = raceInfoBuffer["International"]/totalPop;
 
 	// selects the canvas on which to bake the pie
     var racePie = d3.select("#detailVis")
