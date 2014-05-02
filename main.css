@@ -41,6 +41,11 @@ li {
 a {
 	display: block;
 	padding: 5px;
+	text-decoration: none;
+}
+
+a:link {
+	font-color: inherit;
 }
 
 li a:hover {
