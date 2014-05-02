@@ -162,6 +162,35 @@ var loadStateData = function() {
 				var total = statesData[d.properties.code].college_crime.total;
 				return collegeCrimeScale(total);
 			});
+	
+		var gradient = mainVisFrame
+			.append("defs")
+			.append("linearGradient")
+				.attr("id", "grad1")
+				.attr("x1", "0%")
+				.attr("y1", "0%")
+				.attr("x2", "100%")
+				.attr("y2", "0%");
+		gradient.append("stop.stop1")
+			.attr("offset", "0%")
+			.attr("class", "stop1")
+			.style({
+				'stop-color': 'rgb(68,68,68)',
+				'stop-opacity': 1
+			});
+		gradient.append("stop.stop2")
+			.attr("offset", "0%")
+				.attr("class", "stop1")
+				.style({
+					'stop-color': 'rgb(204,51,51)',
+					'stop-opacity': 1
+				});
+		mainVisFrame.append("rect")
+				.attr("x", "0")
+				.attr("y", "0")
+				.attr("width", "100px")
+				.attr("height", "30px")
+				.attr("fill", "url(#grad1)");
 
 		//load data for state average of university detail vis, set selected state name and selected object as the variable for school name and school object to maintain the same configuration 
 		selectedSchool = selectedState;
