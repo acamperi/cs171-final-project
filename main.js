@@ -843,16 +843,16 @@ function tablify() {
 			.style("padding", "0px");
 
 		// adds school name
-		if (statetab == 0) {
+		// if (statetab == 0) {
 			largeName = d3.select("#detailVis")
 				.insert("h2", "#dataTable")
 				.text(schoolName);
-		}
-		else if (statetab == 1) {
-			largeName = d3.select("#detailVis")
-				.insert("h2", "#dataTable")
-				.text(selectedStateName);
-		}
+		// }
+		// else if (statetab == 1) {
+		// 	largeName = d3.select("#detailVis")
+		// 		.insert("h2", "#dataTable")
+		// 		.text(selectedStateName);
+		// }
 
 		// sets up the table based on schoolInfoBuffer	
 		// var infoTableCol = dataTable;
