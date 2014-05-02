@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link href='http://fonts.googleapis.com/css?family=Exo:200,400,700,200italic,400italic,700italic|Roboto+Slab:400,700' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="main.css">
+		<title>College Campus Security</title>
+	</head>
+	<body>
+		<script src="libs/jquery-1.11.0.min.js"></script>
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		<script src="http://d3js.org/topojson.v1.min.js"></script>
+		<script src="http://underscorejs.org/underscore-min.js"></script>
+		<script src="https://www.google.com/jsapi"></script>
+
+		<table>
+			<tr>
+				<td style="padding: 0px; background-color: #222222; vertical-align: top;">
+					<div id="headerArea" style="background-color: #222222; vertical-align: center;">
+						<h1>College Campus Security <sup>2010-2012</sup></h1>
+						<h4><i style="font-size: 70%">A CS171 Project by</i> Ariel Camperi, Elisabeth Dewailly, Myles Novick, and Dennis Sun</h4>
+					</div>
+				</td>
+				<td style="padding-left: 10px; padding-right: 10px; background-color: #222222; vertical-align: middle;">
+					<div style="background-color: #443333; padding: 8px;"><h4>How to use this map:</h4>
+					<p>Select a dot on the map to view school data.</br>
+						Click states to zoom.
+					</p></div>
+				</td>
+				<td id="searchArea" style="background-color: #222222; vertical-align: middle;">
+					<footer>
+						<ul>
+							<li><a href="index.html">Map</a></li>
+							<li><a style="background: #FFFFFF;">Sources</a></li>
+							<li><a href="processbook.pdf">Process</a></li>
+							<li><a href="#">Video</a></li>
+						</ul>
+					</footer>
+					</br>
+					<input type="search" placeholder="Search Schools" style="opacity: 0;"></input><button type="button" style="opacity: 0;">Search</button>
+				</td>
+			</tr>
+		</table>
+
+		<div>
+			<h2>Our sources:</h2>
+			<p>
+				U.S. Department of Education > Office of Postsecondary Education </br>
+				U.S. Department of Education > Institute of Education Sciences > National Center for Education Statistics </br>
+				U.S. Department of Justice > Federal Bureau of Investigation > Uniform Crime Reporting Program
+			</p>
+		</div>
+
+		<script src="main.js"></script>
+	</body>
+</html>

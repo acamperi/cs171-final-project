@@ -15,40 +15,49 @@
 	<script>
 
 	d3.json("data/institutionsData101112.json", function(error, institutionsData) {
-		var invalid_addresses = ["id\taddress\tcity\tstate\tzip"], invalid_ids = [];
-		var num_institutions = _.keys(institutionsData).length, num_incomplete_institutions = 0;
-		var times_queried_maps_api = 0, num_positive_responses = 0;
-		var geocoder = new google.maps.Geocoder();
-		var index = 0;
+		var geocodingData = {};
 		_.each(institutionsData, function(institution) {
-			if (institution.lonlat.length === 0) {
-				num_incomplete_institutions++;
-				setTimeout(function() {
-					var address = institution.address + ", " + institution.city + ", " + institution.state + " " + institution.zip;
-					geocoder.geocode({address: address}, function(results, status) {
-						if (status == google.maps.GeocoderStatus.OK) {
-							institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
-							num_positive_responses++;
-						}
-						else {
-							invalid_addresses.push([institution.id, institution.address, institution.city, institution.state, institution.zip].join('\t'));
-							invalid_ids.push(institution.id);
-						}
-						console.log("got response from google maps, positive = " + (status == google.maps.GeocoderStatus.OK));
-						times_queried_maps_api++;
-					});
-				}, index * 100);
-				index++;
-			}
+			geocodingData[institution.id] = {
+				lon: institution.lonlat[0],
+				lat: institution.lonlat[1]
+			};
 		});
-		setTimeout(function() {
-			filteredInstitutionsData = _.omit(institutionsData, invalid_ids);
-			console.log("total institutions = " + num_institutions + "; incomplete institutions = " + num_incomplete_institutions + "; positive responses = " + num_positive_responses);
-			console.log(filteredInstitutionsData);
-			console.log(_.keys(filteredInstitutionsData).length);
-			saveToFile(filteredInstitutionsData, "institutionsData101112.json");
-			saveToTSV(invalid_addresses, "addresses.tsv");
-		}, 20000);
+		saveToFile(geocodingData, "geocodingData.json");
+
+		// var invalid_addresses = ["id\taddress\tcity\tstate\tzip"], invalid_ids = [];
+		// var num_institutions = _.keys(institutionsData).length, num_incomplete_institutions = 0;
+		// var times_queried_maps_api = 0, num_positive_responses = 0;
+		// var geocoder = new google.maps.Geocoder();
+		// var index = 0;
+		// _.each(institutionsData, function(institution) {
+		// 	if (institution.lonlat.length === 0) {
+		// 		num_incomplete_institutions++;
+		// 		setTimeout(function() {
+		// 			var address = institution.address + ", " + institution.city + ", " + institution.state + " " + institution.zip;
+		// 			geocoder.geocode({address: address}, function(results, status) {
+		// 				if (status == google.maps.GeocoderStatus.OK) {
+		// 					institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
+		// 					num_positive_responses++;
+		// 				}
+		// 				else {
+		// 					invalid_addresses.push([institution.id, institution.address, institution.city, institution.state, institution.zip].join('\t'));
+		// 					invalid_ids.push(institution.id);
+		// 				}
+		// 				console.log("got response from google maps, positive = " + (status == google.maps.GeocoderStatus.OK));
+		// 				times_queried_maps_api++;
+		// 			});
+		// 		}, index * 100);
+		// 		index++;
+		// 	}
+		// });
+		// setTimeout(function() {
+		// 	filteredInstitutionsData = _.omit(institutionsData, invalid_ids);
+		// 	console.log("total institutions = " + num_institutions + "; incomplete institutions = " + num_incomplete_institutions + "; positive responses = " + num_positive_responses);
+		// 	console.log(filteredInstitutionsData);
+		// 	console.log(_.keys(filteredInstitutionsData).length);
+		// 	saveToFile(filteredInstitutionsData, "institutionsData101112.json");
+		// 	saveToTSV(invalid_addresses, "addresses.tsv");
+		// }, 20000);
 	});
 
 	var saveToFile = function(object, filename) {

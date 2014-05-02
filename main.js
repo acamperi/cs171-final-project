@@ -53,12 +53,12 @@ var racePieVis = {
 	w: 140,		//width
 	h: 140,		//height
 	r: 70		//radius
-}
+};
 
 var financialAidBarVis = {
 	yAxisW: 20,
-	x: genderBarVis.x + genderBarVis.w + 50,
-	chartX: 40 + genderBarVis.x + genderBarVis.w + 50,
+	x: genderBarVis.x + genderBarVis.w + 70,
+	chartX: 40 + genderBarVis.x + genderBarVis.w + 70,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
 	w: 150,
@@ -66,23 +66,24 @@ var financialAidBarVis = {
 	xAxisY: 10 + genderBarVis.y + 200,
 	xAxisH: 30,
 	barWidth: 15
-}
+};
 
 var crimeBarVis = {
 	yAxisW: 20,
-	x: 0,
-	chartX: genderBarVis.x + 30,
+	x: 10,
+	chartX: genderBarVis.x + 40,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
-	w: 350,
+	w: 325,
 	h: 200,
 	xAxisY: 10 + genderBarVis.y + 200,
 	xAxisH: 30,
 	barWidth: 25
-}
+};
 
 var school_dot_radius = 1;
 var zscale = 1;
+var statetab = 0;
 
 // ===============================
 //   SETUP FUNCTIONS & VARIABLES
@@ -90,8 +91,10 @@ var zscale = 1;
 
 // for zoom functionality
 var zoom = d3.behavior.zoom()
-    .scaleExtent([1, 10])
-    // .on("zoom", move);
+    .scaleExtent([1, 10]);
+    //.on("zoom", move);
+
+// console.log(d3.event.sourceEvent.pageX);
 
 // for tooltip functionality
 var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip");
@@ -106,17 +109,11 @@ var numberSchoolObjects = 0;
 var selectedSchoolObject = null;
 var comparedSchoolObject = null;
 
+var selectedStateName = null;
+
 var detailified = false;
 var currentTab = 1;
 var newPage = true;
-
-// borrowed from http://exoboy.wordpress.com/2011/07/14/the-problems-with-tofixed-in-javascript/
-Number.prototype.trimNum = function(places,rounding){
-(rounding != 'floor' && rounding != 'ceil') ? rounding = 'round' : rounding = rounding;
-var result, num = this, multiplier = Math.pow( 10,places );
-result = Math[rounding](num * multiplier) / multiplier;
-return Number( result );
-}
 
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
@@ -252,6 +249,42 @@ function selectSchoolObject(x)
 }
 
 var loadStateData = function() {
+	d3.json("data/statesData101112.json", function(error, statesData) {
+		var collegeCrimeScale = d3.scale.linear()
+			.interpolate(d3.interpolateRgb)
+			.range(["#444444", "#cc3333"])
+			.domain(d3.extent(_.values(statesData), function(d) {
+				return d.college_crime.total;
+			}));
+		mainVisFrame.selectAll(".state")
+			.style("fill", function(d) {
+				var total = statesData[d.properties.code].college_crime.total;
+				return collegeCrimeScale(total);
+			});
+
+		//load data for state average of university detail vis, set selected state name and selected object as the variable for school name and school object to maintain the same configuration 
+		selectedSchool = selectedState;
+		selectedSchoolObject = statesData[selectedState];
+		statetab = 1;
+
+		newPage = true;
+
+		if (newPage === true) {
+					d3.select("#clickPlease")
+						.remove();
+					newPage = false;
+					// tells tabbify to set appropriate tabs for state level
+					tabbify();
+		}
+
+		statedetailify();
+ 		detailified = true;
+		
+ 	});
+ };
+
+			
+var loadInstitutionData = function() {
 	d3.json("data/institutionsData101112.json", function(error, data) {
 		var projections = [];
 		var schoolIDList = [];
@@ -283,25 +316,33 @@ var loadStateData = function() {
 		.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
 		.on("mouseout", function(){return tooltip.style("visibility", "hidden");})
 		.on("click", function(x){
+			selectedSchool = x;
+			selectedSchoolObject = data[x];
+			statetab = 0;
+
+			newPage = true;
+
+			if (newPage === true) {
+				d3.select("#clickPlease")
+					.remove();
+				newPage = false;
+				// tells tabbify to set appropriate tabs for institution level
+				tabbify();
+			}
+
+			detailify();
 
 			selectSchoolObject(data[x]);
 
 			d3.select(this)
 				.attr("class", "thisSchool");
 		});
-
-		selectedSchoolObject = data[schoolIDList[0]];
-
-		// console.log(selectedSchoolObject);
-		
-		detailfied = true;
-
-	});
-	
+	});	
 };
 
+
 var loadMap = function() {
-	d3.json("../data/us-named.json", function(error, data) {
+	d3.json("data/us-named.json", function(error, data) {
 	    var usMap = topojson.feature(data,data.objects.states).features;
 
 		// make map here, for now just draw without setting color for states
@@ -311,11 +352,17 @@ var loadMap = function() {
 	    states.enter()
 	        .append("path")
 	        .attr("d", path)
-	        .attr("title", function(d,i) { return d.properties.name; });
+	        .attr("title", function(d,i) { return d.properties.code; });
 
 	    states.attr("class", "state")
 	    	.attr("stroke", "white")
-	    	.on("click", clicked);
+	    	.on("dblclick", clicked)
+	    	.on("click", function(d, i){
+	    		selectedState = d.properties.code;
+	    		selectedStateName = d.properties.name;
+	    		loadStateData();
+	    	});
+	    	
 
 	 //    // offsets for tooltips, from http://techslides.com/demos/d3/worldmap-template.html
 		// var offsetL = document.getElementById('mainVis').offsetLeft+20;
@@ -334,6 +381,7 @@ var loadMap = function() {
 
 		// load in actual data
 		loadStateData();
+		loadInstitutionData();
 	});
 };
 
@@ -344,9 +392,10 @@ var loadMap = function() {
 // click & drag functionality, from http://techslides.com/demos/d3/worldmap-template.html
 function move() {
 	var t = d3.event.translate;
-	var s = d3.event.scale; 
-	zscale = s;
+	var s = d3.event.scale;
 	var h = bbMainVis.h/4;
+
+	zscale = s;
 
 	t[0] = Math.min(
 		(bbMainVis.w/bbMainVis.h)  * (s - 1), 
@@ -366,10 +415,11 @@ function move() {
 	d3.selectAll(".thisSchool").attr("r", school_dot_radius / s);
 }
 
+
 //geo translation on mouse click in map
 function click() {
-  var latlon = projection.invert(d3.mouse(this));
-  // console.log(latlon);
+	var latlon = projection.invert(d3.mouse(this));
+	console.log(latlon);
 }
 
 function clicked(d) {
@@ -389,8 +439,8 @@ function clicked(d) {
 		centered = null;
 	}
 
-	if (zscale != 1)
-		k = 4;
+	// if (zscale != 1)
+	// 	k = 4;
 
 	zoom.scale(k);
 	zoom.translate([x, y]);
@@ -406,7 +456,8 @@ function clicked(d) {
   
   	d3.selectAll(".state").transition().duration(750).style("stroke-width", 1 / k);
   	d3.selectAll(".school").transition().duration(750).attr("r", school_dot_radius / k);
-  	d3.selectAll(".thisSchool").transition().duration(750).attr("r", school_dot_radius / k);
+		d3.selectAll(".thisSchool").transition().duration(750).attr("r", school_dot_radius / k);
+
 }
 
 // ===============================
@@ -443,8 +494,6 @@ if (imageSearch.results && imageSearch.results.length > 0) {
 
   	// Loop through our results, printing them to the page.
   	var results = imageSearch.results;
-  	
-	// console.log(results);
 
     // For each result write it's title and image to the screen
     var result = results[0];
@@ -483,6 +532,15 @@ function searchForImageForCollege(college_name) {
 
 // function that creates the SVG tabs
 function tabbify() {
+
+	// removes table
+	d3.select("#detailVis").select("#tabBar")
+		.remove();
+
+	if (statetab == 1 && currentTab == 3) {
+		currentTab = 1;
+	}
+
 	var tabBar = d3.select("#detailVis")
 		.insert("svg", "#canvas")
 			.attr("width", bbDetailTabs.w)
@@ -502,7 +560,13 @@ function tabbify() {
 		.attr("text-anchor", "middle")
 		.attr("x", bbDetailTabs.w/(bbDetailTabs.barCount*2))
 		.attr("y", bbDetailTabs.h/2 + 5)
-		.text("School Data");
+		.text( function () { 
+			if (statetab == 0){
+				return "School Data";
+			}
+			else
+				return "State Data"; 
+		});
 
 	var tabBar2 = tabBar.append("g")
 		.attr("id", "tabBar2");
@@ -511,26 +575,63 @@ function tabbify() {
 		.attr("y", 0)
 		.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
 		.attr("height", bbDetailTabs.h)
-		.attr("fill", "#BBBBBB")
+		.attr("fill", "#FFFFFF")
 	tabBar2.append("text")
 		.attr("text-anchor", "middle")
 		.attr("x", bbDetailTabs.w/bbDetailTabs.barCount + bbDetailTabs.w/(bbDetailTabs.barCount*2))
 		.attr("y", bbDetailTabs.h/2 + 5)
 		.text("Crime Statistics");
 
-	var tabBar3 = tabBar.append("g")
-		.attr("id", "tabBar3");
-	tabBar3.append("rect")
-		.attr("x", (bbDetailTabs.w/bbDetailTabs.barCount) * 2)
-		.attr("y", 0)
-		.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
-		.attr("height", bbDetailTabs.h)
-		.attr("fill", "#BBBBBB")
-	tabBar3.append("text")
-		.attr("text-anchor", "middle")
-		.attr("x", (bbDetailTabs.w/bbDetailTabs.barCount) * 2 + bbDetailTabs.w/(bbDetailTabs.barCount*2))
-		.attr("y", bbDetailTabs.h/2 + 5)
-		.text("School Comparison");
+	if (statetab == 0) {
+		var tabBar3 = tabBar.append("g")
+			.attr("id", "tabBar3");
+		tabBar3.append("rect")
+			.attr("x", (bbDetailTabs.w/bbDetailTabs.barCount) * 2)
+			.attr("y", 0)
+			.attr("width", bbDetailTabs.w/bbDetailTabs.barCount)
+			.attr("height", bbDetailTabs.h)
+			.attr("fill", "#FFFFFF");
+		tabBar3.append("text")
+			.attr("text-anchor", "middle")
+			.attr("x", (bbDetailTabs.w/bbDetailTabs.barCount) * 2 + bbDetailTabs.w/(bbDetailTabs.barCount*2))
+			.attr("y", bbDetailTabs.h/2 + 5)
+			.text("School Comparison");
+	}
+
+	if (currentTab == 1) {
+		d3.select("#tabBar2")
+			.select("svg rect")
+			.attr("fill", "#BBBBBB");
+		d3.select("#tabBar3")
+			.select("svg rect")
+			.attr("fill", "#BBBBBB");
+	}
+	else if (currentTab == 2) {
+		d3.select("#tabBar1")
+			.select("svg rect")
+			.attr("fill", "#BBBBBB");
+		d3.select("#tabBar3")
+			.select("svg rect")
+			.attr("fill", "#BBBBBB");
+	}
+	else if (currentTab == 3) {
+		if (statetab == 0) {
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+			d3.select("#tabBar3")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+		}
+		else if (statetab == 1) {
+			d3.select("#tabBar1")
+				.select("svg rect")
+				.attr("fill", "#FFFFFF");
+			d3.select("#tabBar2")
+				.select("svg rect")
+				.attr("fill", "#BBBBBB");
+		}
+	}
 
 	tabBar1.on("click", function(){
 		if(currentTab != 1) {
@@ -590,39 +691,40 @@ function tabbify() {
 		
 	});
 
-	tabBar3.on("click", function(){
-		if(currentTab != 3) {
-			d3.selectAll(".tab1")
-				.attr("opacity", "0");
-			d3.selectAll(".tab2")
-				.attr("opacity", "0");
-			d3.selectAll(".tab3")
-				.attr("opacity", "1");
+	if (statetab == 0) {
+		tabBar3.on("click", function(){
+			if(currentTab != 3) {
+				d3.selectAll(".tab1")
+					.attr("opacity", "0");
+				d3.selectAll(".tab2")
+					.attr("opacity", "0");
+				d3.selectAll(".tab3")
+					.attr("opacity", "1");
 
-			d3.select("#tabBar1")
-				.select("svg rect")
-				.attr("fill", "#BBBBBB");
-			d3.select("#tabBar2")
-				.select("svg rect")
-				.attr("fill", "#BBBBBB");
-			d3.select("#tabBar3")
-				.select("svg rect")
-				.attr("fill", "#FFFFFF");
+				d3.select("#tabBar1")
+					.select("svg rect")
+					.attr("fill", "#BBBBBB");
+				d3.select("#tabBar2")
+					.select("svg rect")
+					.attr("fill", "#BBBBBB");
+				d3.select("#tabBar3")
+					.select("svg rect")
+					.attr("fill", "#FFFFFF");
 
-			d3.select("#dataTable").style("opacity", "0");
-			d3.select("#dataTable").classed("fullyHidden", true).classed("fullyVisible", false);
-			d3.select("#rootTable").style("opacity", "1");
-			d3.select("#rootTable").classed("fullyHidden", false).classed("fullyVisible", true);
+				d3.select("#dataTable").style("opacity", "0");
+				d3.select("#dataTable").classed("fullyHidden", true).classed("fullyVisible", false);
+				d3.select("#rootTable").style("opacity", "1");
+				d3.select("#rootTable").classed("fullyHidden", false).classed("fullyVisible", true);
 
-			currentTab = 3;
-		}
-		
-	});
+				currentTab = 3;
+			}
+		});
+	}
 }
 
 // function that generates all the detail visualizations
 function detailify() {
-	if (detailified = true) {
+	if (detailified === true) {
 		// selects visualization
 		vis1 = d3.select("#detailVis");
 
@@ -663,9 +765,46 @@ function detailify() {
 	detailified = true;
 }
 
+// function that generates all the detail visualizations
+function statedetailify() {
+	if (detailified === true) {
+		// selects visualization
+		vis1 = d3.select("#detailVis");
+
+		// removes school header
+		vis1.select("h2")
+			.remove();
+
+		// removes table
+		vis1.select("#dataTable")
+			.remove();
+
+		// removes everything from the canvas
+		svg1 = vis1.select("#canvas");
+		svg1.selectAll("g")
+			.remove();
+		svg1.selectAll("text")
+			.remove();
+
+		vis2 = d3.select("#detailVis2");
+
+		// removes everything from the SVG
+		svg2 = vis2.select("svg");
+		svg2.selectAll("g")
+			.remove();
+
+	}
+	detailified = false;
+	genderize();
+	pieBaker();
+	financify();
+	statecrimeify();
+	detailified = true;
+}
+
 // function for creating an info table
 function tablify() {
-	if (selectedSchoolObject != null) {
+	if (selectedSchoolObject !== null) {
 		// collecting only pertinent data from the selectedSchoolObject
 		schoolName = selectedSchoolObject["name"];
 		// schoolBranch = selectedSchoolObject["branch"];
@@ -681,18 +820,20 @@ function tablify() {
 			.attr("class", "tab1")
 			.style("padding", "0px");
 
-
 		// adds school name
-		var name = d3.select("#detailVis")
-			.insert("h2", "#dataTable")
-			.text(schoolName);
-
-		console.log(schoolInfoBuffer);
+		if (statetab == 0) {
+			var name = d3.select("#detailVis")
+				.insert("h2", "#dataTable")
+				.text(schoolName);
+		}
+		else if (statetab == 1) {
+			var name = d3.select("#detailVis")
+				.insert("h2", "#dataTable")
+				.text(selectedStateName);
+		}
 
 		// sets up the table based on schoolInfoBuffer	
 		// var infoTableCol = dataTable;
-
-
 
 		var superTable = dataTable
 			.append("table");
@@ -1019,7 +1160,7 @@ function genderize() {
 
 	var genderScale = d3.scale.linear().domain([0, 1]).range([0, genderBarVis.w]);
 
-	if (selectedSchoolObject != null) {
+	if (selectedSchoolObject !== null) {
 		var males = parseInt(selectedSchoolObject["demographics"]["total_men"]);
 		var females = parseInt(selectedSchoolObject["demographics"]["total_women"]);
 		var total = parseInt(selectedSchoolObject["demographics"]["total"]);
@@ -1089,8 +1230,8 @@ function pieBaker() {
     raceInfoBuffer["Hispanic/Latinx"] = parseInt(selectedSchoolObject["demographics"]["hispanic_latino_total"]);
     raceInfoBuffer["Native Hawaiian/Other Pacific Islander"] = parseInt(selectedSchoolObject["demographics"]["native_hawaiian_other_pacific_islander_total"]);
 	raceInfoBuffer["American Indian/Alaska Native"] = parseInt(selectedSchoolObject["demographics"]["american_indian_alaska_native_total"]);
-	raceInfoBuffer["Multiracial"] = parseInt(selectedSchoolObject["demographics"]["two_plus_races_total"]);
-	raceInfoBuffer["International"] = parseInt(selectedSchoolObject["demographics"]["nonresident_alien_total"]);
+	// raceInfoBuffer["Multiracial"] = parseInt(selectedSchoolObject["demographics"]["two_plus_races_total"]);
+	// raceInfoBuffer["International"] = parseInt(selectedSchoolObject["demographics"]["nonresident_alien_total"]);
 
 	raceProportionsBuffer = {};
 	var totalPop = 
@@ -1099,17 +1240,17 @@ function pieBaker() {
 		raceInfoBuffer["White"] +
 		raceInfoBuffer["Hispanic/Latinx"] +
 		raceInfoBuffer["Native Hawaiian/Other Pacific Islander"] +
-		raceInfoBuffer["American Indian/Alaska Native"] +
-		raceInfoBuffer["Multiracial"] +
-		raceInfoBuffer["International"];
+		raceInfoBuffer["American Indian/Alaska Native"];
+		// raceInfoBuffer["Multiracial"] +
+		// raceInfoBuffer["International"];
 	raceProportionsBuffer["Black/African-American"] = raceInfoBuffer["Black/African-American"]/totalPop;
 	raceProportionsBuffer["Asian"] = raceInfoBuffer["Asian"]/totalPop;
 	raceProportionsBuffer["White"] = raceInfoBuffer["White"]/totalPop;
 	raceProportionsBuffer["Hispanic/Latinx"] = raceInfoBuffer["Hispanic/Latinx"]/totalPop;
 	raceProportionsBuffer["Native Hawaiian/Other Pacific Islander"] = raceInfoBuffer["Native Hawaiian/Other Pacific Islander"]/totalPop;
 	raceProportionsBuffer["American Indian/Alaska Native"] = raceInfoBuffer["American Indian/Alaska Native"]/totalPop;
-	raceProportionsBuffer["Multiracial"] = raceInfoBuffer["Multiracial"]/totalPop;
-	raceProportionsBuffer["International"] = raceInfoBuffer["International"]/totalPop;
+	// raceProportionsBuffer["Multiracial"] = raceInfoBuffer["Multiracial"]/totalPop;
+	// raceProportionsBuffer["International"] = raceInfoBuffer["International"]/totalPop;
 
 	// selects the canvas on which to bake the pie
     var racePie = d3.select("#detailVis")
@@ -1156,7 +1297,7 @@ function pieBaker() {
     	.data(d3.entries(raceProportionsBuffer))
     	.enter()
     	.append("text")
-    	.attr("x", 38 + racePieVis.x)
+    	.attr("x", 38 + racePieVis.x + 10)
         .attr("y", function(d,i) {
         	return racePieVis.h + 15 + racePieVis.y + (10 * (i + 1));
         })
@@ -1172,7 +1313,7 @@ function pieBaker() {
 		.append("rect")
     	.attr("width", "10px")
     	.attr("height", "10px")
-    	.attr("x", 40 + racePieVis.x)
+    	.attr("x", 40 + racePieVis.x + 10)
         .attr("y", function(d,i) {
         	return racePieVis.h + 15 + racePieVis.y + (10 * i);
         })
@@ -1187,7 +1328,7 @@ function pieBaker() {
     	.data(raceNames)
     	.enter()
     	.append("text")                                     //add a label to each slice
-        .attr("x", 54 + racePieVis.x)
+        .attr("x", 54 + racePieVis.x + 10)
         .attr("y", function(d,i) {
         	return racePieVis.h + 15 + racePieVis.y + (10 * (i + 1));
         })
@@ -1215,8 +1356,6 @@ function financify() {
 
 	financeInfo = d3.entries(financeInfoBuffer);
 	financeInfoKeys = d3.keys(financeInfoBuffer);
-
-	// console.log(financeInfoKeys);
 
 	xScale = d3.scale.ordinal()
 		.domain(financeInfoKeys)
@@ -1287,14 +1426,22 @@ function financify() {
             .attr("dx", "-.8em")
             .attr("dy", ".15em")
             .attr("transform", function(d) {
-                return "rotate(-65)" 
-                });
+                return "rotate(-65)" ;
+            });
 
     financialAidBars.append("g")
         .attr("class", "axis")
         .attr("id", "financialYAxis")
-        .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
-        .call(fBYAxis);
+        .attr("transform", "translate(" + (financialAidBarVis.chartX) + "," + financialAidBarVis.chartY +")")
+        .call(fBYAxis)
+        .append("text")
+	        .attr("transform", "rotate(-90)")
+	        .attr("y", -70)
+	        .attr("x", -financialAidBarVis.h/2)
+	        .attr("dy", "1em")
+	        .style("text-anchor", "middle")
+	        .text("Average financial aid ($)")
+	  			.attr("class", "tick");
 
     if (financeInfoBuffer["Average"] == 0) {
     	var blankAlert = financialAidBars.append("g")
@@ -1331,6 +1478,130 @@ function crimeify() {
 	crimeInfoBuffer["burglary"] = parseInt(selectedSchoolObject["crime"]["burglary"]);
 	crimeInfoBuffer["motor vehicle theft"] = parseInt(selectedSchoolObject["crime"]["motor_vehicle_theft"]);
 	crimeInfoBuffer["arson"] = parseInt(selectedSchoolObject["crime"]["arson"]);
+
+	crimeInfo = d3.entries(crimeInfoBuffer);
+	crimeInfoKeys = d3.keys(crimeInfoBuffer);
+
+	xScale = d3.scale.ordinal()
+		.domain(crimeInfoKeys)
+		.rangePoints([0, crimeBarVis.w]);  // define the right domain generically
+    yScale = d3.scale.linear()
+    	.domain([0, d3.max(crimeInfo, function(d){
+    		return d.value;
+   		})])
+   		.range([0, crimeBarVis.h]);
+   	inverseYScale = d3.scale.linear()
+    	.domain([0, d3.max(crimeInfo, function(d){
+    		return d.value;
+   		})])
+   		.range([crimeBarVis.h, 0]);
+
+	var cBXAxis = d3.svg.axis()
+      .scale(xScale)
+      .orient("bottom");
+
+    var cBYAxis = d3.svg.axis()
+      .scale(inverseYScale)
+      .orient("left");
+
+	// selects the canvas on which to make the visualization
+    var crimeBars = d3.select("#detailVis")
+    	.select("#canvas")
+    	.append("g")
+    	.attr("id", "crimeBars")
+    	.attr("class", "tab2");
+
+    // makes the title
+    crimeBars.append("text")
+		.attr("class", "detailVisHeader")
+		.attr("x", crimeBarVis.x)
+		.attr("y", (crimeBarVis.y - 5))
+		.text("University Crime");
+
+	// makes the bars
+	crimeBars.selectAll(".bar")
+        .data(crimeInfo)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d, i) { 
+        	return crimeBarVis.barWidth/2 + crimeBarVis.chartX + xScale(d.key);
+        })
+        .attr("y", function(d) {
+        	return crimeBarVis.chartY + (crimeBarVis.h - yScale(d.value));
+        })
+        .attr("width", function(d, i) {
+        	return crimeBarVis.barWidth;
+        })
+        .attr("height", function(d) {
+        	return yScale(d.value);
+        })
+        .attr("title", function(d) {
+        	return d.key;
+        });
+
+    crimeBars.append("g")
+        .attr("class", "axis")
+        .attr("id", "crimeXAxis")
+        .attr("transform", "translate(" + (crimeBarVis.chartX + crimeBarVis.barWidth) + "," + crimeBarVis.xAxisY +")")
+        .call(cBXAxis)
+      	// modified from http://www.d3noob.org/2013/01/how-to-rotate-text-labels-for-x-axis-of.html
+        	.selectAll("text")  
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                return "rotate(-65)" ;
+            });
+
+    crimeBars.append("g")
+        .attr("class", "axis")
+        .attr("id", "crimeYAxis")
+        .attr("transform", "translate(" + crimeBarVis.chartX + "," + crimeBarVis.chartY +")")
+        .call(cBYAxis)
+        .append("text")
+	        .attr("transform", "rotate(-90)")
+	        .attr("y", -40)
+	        .attr("x", -crimeBarVis.h/2)
+	        .attr("dy", "1em")
+	        .style("text-anchor", "middle")
+	        .text("Crimes per year")
+	  			.attr("class", "tick");
+
+    if (crimeInfoBuffer["total"] == 0) {
+    	var blankAlert = crimeBars.append("g")
+    		.attr("class", "alertWindow");
+    	blankAlert.append("rect")
+    		.attr("width", "120px")
+    		.attr("height", "20px")
+    		.attr("x", crimeBarVis.w/2 - 20)
+    		.attr("y", crimeBarVis.h/2 + 15);
+    	blankAlert.append("text")
+    		.attr("x", crimeBarVis.w/2 + 40)
+    		.attr("y", crimeBarVis.h/2 + 30)
+    		.attr("text-anchor", "middle")
+    		.text("No data available.");
+    }
+
+    if (currentTab != 2) {
+    	d3.selectAll(".tab2")
+    	.attr("opacity", "0");
+    }   
+}
+
+function statecrimeify() {
+
+	crimeInfoBuffer = {};
+	crimeInfoBuffer["total"] = parseInt(selectedSchoolObject["college_crime"]["total"]);
+	crimeInfoBuffer["murder"] = parseInt(selectedSchoolObject["college_crime"]["murder"]);
+	crimeInfoBuffer["negligent manslaughter"] = parseInt(selectedSchoolObject["college_crime"]["negligent_manslaughter"]);
+	crimeInfoBuffer["forcible sex offense"] = parseInt(selectedSchoolObject["college_crime"]["forcible_sex_offense"]);
+	crimeInfoBuffer["nonforcible sex offense"] = parseInt(selectedSchoolObject["college_crime"]["nonforcible_sex_offense"]);
+	crimeInfoBuffer["robbery"] = parseInt(selectedSchoolObject["college_crime"]["robbery"]);
+	crimeInfoBuffer["aggravated assault"] = parseInt(selectedSchoolObject["college_crime"]["aggravated_assault"]);
+	crimeInfoBuffer["burglary"] = parseInt(selectedSchoolObject["college_crime"]["burglary"]);
+	crimeInfoBuffer["motor vehicle theft"] = parseInt(selectedSchoolObject["college_crime"]["motor_vehicle_theft"]);
+	crimeInfoBuffer["arson"] = parseInt(selectedSchoolObject["college_crime"]["arson"]);
 
 	crimeInfo = d3.entries(crimeInfoBuffer);
 	crimeInfoKeys = d3.keys(crimeInfoBuffer);
@@ -1406,8 +1677,8 @@ function crimeify() {
             .attr("dx", "-.8em")
             .attr("dy", ".15em")
             .attr("transform", function(d) {
-                return "rotate(-65)" 
-                });
+                return "rotate(-65)" ;
+            });
 
     crimeBars.append("g")
         .attr("class", "axis")
@@ -1435,4 +1706,3 @@ function crimeify() {
     	.attr("opacity", "0");
     }   
 }
-
