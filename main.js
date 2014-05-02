@@ -143,6 +143,7 @@ var detailVisFrames = d3.select("#detailVis")
 
 var projection = d3.geo.albersUsa().translate([bbMainVis.w / 2, bbMainVis.h / 2]);//.precision(.1);
 var path = d3.geo.path().projection(projection);
+var needsDetailify = false;
 
 // ============================
 //   MAIN VISUALIZATION SETUP
@@ -658,6 +659,9 @@ function tabbify() {
 			d3.select("#rootTable").classed("fullyHidden", true).classed("fullyVisible", false);
 
 			currentTab = 1;
+
+			if (needsDetailify)
+				detailify();
 		}
 
 	});
@@ -687,6 +691,8 @@ function tabbify() {
 			d3.select("#rootTable").classed("fullyHidden", true).classed("fullyVisible", false);
 
 			currentTab = 2;
+			if (needsDetailify)
+				detailify();
 		}
 		
 	});
@@ -717,6 +723,8 @@ function tabbify() {
 				d3.select("#rootTable").classed("fullyHidden", false).classed("fullyVisible", true);
 
 				currentTab = 3;
+
+				needsDetailify = true;
 			}
 		});
 	}
@@ -802,6 +810,8 @@ function statedetailify() {
 	detailified = true;
 }
 
+var largeName;
+
 // function for creating an info table
 function tablify() {
 	if (selectedSchoolObject !== null) {
@@ -822,12 +832,12 @@ function tablify() {
 
 		// adds school name
 		if (statetab == 0) {
-			var name = d3.select("#detailVis")
+			largeName = d3.select("#detailVis")
 				.insert("h2", "#dataTable")
 				.text(schoolName);
 		}
 		else if (statetab == 1) {
-			var name = d3.select("#detailVis")
+			largeName = d3.select("#detailVis")
 				.insert("h2", "#dataTable")
 				.text(selectedStateName);
 		}
@@ -875,6 +885,8 @@ var comparisonCol;
 function compare()
 {
 	d3.select("#comparisonTable").remove();
+
+	largeName.text(selectedSchoolObject.name);
 
 	// var comparisonData = [["", selectedSchoolObject.name, comparedSchoolObject.name]];
 	var comparisonData = [["", selectedSchoolObject.name, comparedSchoolObject.name]];
