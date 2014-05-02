@@ -433,35 +433,9 @@ function searchForImageForCollege(college_name) {
 // function that creates the SVG tabs
 function tabbify() {
 
-// // remove previous tabs
-// if (tabbify === true) {
-// 		// selects visualization
-// 		vis1 = d3.select("#detailVis");
-
-// 		// removes school header
-// 		vis1.select("h2")
-// 			.remove();
-
-// 		// removes table
-// 		vis1.select("#dataTable")
-// 			.remove();
-
-// 		// removes everything from the canvas
-// 		svg1 = vis1.select("#canvas");
-// 		svg1.selectAll("g")
-// 			.remove();
-// 		svg1.selectAll("text")
-// 			.remove();
-
-// 		vis2 = d3.select("#detailVis2");
-
-// 		// removes everything from the SVG
-// 		svg2 = vis2.select("svg");
-// 		svg2.selectAll("g")
-// 			.remove();
-
-// }
-
+		// removes table
+		d3.select("#detailVis").select("#tabBar")
+			.remove();
 
 	var tabBar = d3.select("#detailVis")
 		.insert("svg", "#canvas")
