@@ -57,8 +57,8 @@ var racePieVis = {
 
 var financialAidBarVis = {
 	yAxisW: 20,
-	x: genderBarVis.x + genderBarVis.w + 50,
-	chartX: 40 + genderBarVis.x + genderBarVis.w + 50,
+	x: genderBarVis.x + genderBarVis.w + 60,
+	chartX: 40 + genderBarVis.x + genderBarVis.w + 60,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
 	w: 150,
@@ -70,11 +70,11 @@ var financialAidBarVis = {
 
 var crimeBarVis = {
 	yAxisW: 20,
-	x: 0,
-	chartX: genderBarVis.x + 30,
+	x: 10,
+	chartX: genderBarVis.x + 40,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
-	w: 350,
+	w: 325,
 	h: 200,
 	xAxisY: 10 + genderBarVis.y + 200,
 	xAxisH: 30,
@@ -147,8 +147,6 @@ var toggleSelected = function(id) {
 	// change map visualization to reflect selected metric
 };
 
-
-
 var loadStateData = function() {
 	d3.json("data/statesData101112.json", function(error, statesData) {
 		var collegeCrimeScale = d3.scale.linear()
@@ -186,64 +184,62 @@ var loadStateData = function() {
 
 			
 var loadInstitutionData = function() {
-		d3.json("data/institutionsData101112.json", function(error, data) {
-			var projections = [];
-			var schoolIDList = [];
-			var c = 0;
-			for (var schoolID in data)
-			{
-				var computed_projection = projection(data[schoolID]["lonlat"]);
-				if (computed_projection !== null) {
-					schoolIDList.push(schoolID);
-					projections.push(computed_projection);
-				}
-				else
-					c++;
+	d3.json("data/institutionsData101112.json", function(error, data) {
+		var projections = [];
+		var schoolIDList = [];
+		var c = 0;
+		for (var schoolID in data)
+		{
+			var computed_projection = projection(data[schoolID]["lonlat"]);
+			if (computed_projection !== null) {
+				schoolIDList.push(schoolID);
+				projections.push(computed_projection);
 			}
-			// console.log(c);
+			else
+				c++;
+		}
+		// console.log(c);
 
-			// console.log(projections);
-			mainVisFrame.append("g").selectAll(".school").data(schoolIDList).enter().append("circle")
-			.classed("school", true)
-			.attr("r", function(x) { return school_dot_radius; })
-			.attr("cx", function(_, i) {return projections[i][0];})
-			.attr("cy", function(_, i) {return projections[i][1];})
-			.on("mouseover", function(x){return tooltip.style("visibility", "visible").text(function(){
-				return data[x]["name"];
-				});})
-			.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
-			.on("mouseout", function(){return tooltip.style("visibility", "hidden");})
-			.on("click", function(x){
-				selectedSchool = x;
-				selectedSchoolObject = data[x];
-				statetab = 0;
+		// console.log(projections);
+		mainVisFrame.append("g").selectAll(".school").data(schoolIDList).enter().append("circle")
+		.classed("school", true)
+		.attr("r", function(x) { return school_dot_radius; })
+		.attr("cx", function(_, i) {return projections[i][0];})
+		.attr("cy", function(_, i) {return projections[i][1];})
+		.on("mouseover", function(x){return tooltip.style("visibility", "visible").text(function(){
+			return data[x]["name"];
+			});})
+		.on("mousemove", function(){return tooltip.style("top", (event.pageY-10)+"px").style("left",(event.pageX+10)+"px");})
+		.on("mouseout", function(){return tooltip.style("visibility", "hidden");})
+		.on("click", function(x){
+			selectedSchool = x;
+			selectedSchoolObject = data[x];
+			statetab = 0;
 
-				newPage = true;
+			newPage = true;
 
-				if (newPage === true) {
-					d3.select("#clickPlease")
-						.remove();
-					newPage = false;
-					// tells tabbify to set appropriate tabs for institution level
-					tabbify();
-				}
+			if (newPage === true) {
+				d3.select("#clickPlease")
+					.remove();
+				newPage = false;
+				// tells tabbify to set appropriate tabs for institution level
+				tabbify();
+			}
 
-				detailify();
+			detailify();
 
-				d3.selectAll(".thisSchool")
-					.attr("class", "school");
+			d3.selectAll(".thisSchool")
+				.attr("class", "school");
 
-				d3.select(this)
-					.attr("class", "thisSchool");
-			});
-
-			selectedSchool = schoolIDList[0];
-			selectedSchoolObject = data[selectedSchool];
-			// console.log(selectedSchoolObject);
-			
-			detailfied = true;
-		
+			d3.select(this)
+				.attr("class", "thisSchool");
 		});
+
+		selectedSchool = schoolIDList[0];
+		selectedSchoolObject = data[selectedSchool];
+	
+		detailfied = true;
+	});
 };
 
 
@@ -322,8 +318,8 @@ function move() {
 
 //geo translation on mouse click in map
 function click() {
-  var latlon = projection.invert(d3.mouse(this));
-  console.log(latlon);
+	var latlon = projection.invert(d3.mouse(this));
+	console.log(latlon);
 }
 
 function clicked(d) {
@@ -398,8 +394,6 @@ if (imageSearch.results && imageSearch.results.length > 0) {
 
   	// Loop through our results, printing them to the page.
   	var results = imageSearch.results;
-  	
-	console.log(results);
 
     // For each result write it's title and image to the screen
     var result = results[0];
@@ -705,12 +699,8 @@ function tablify() {
 			.insert("h2", "#dataTable")
 			.text(schoolName);
 
-		console.log(schoolInfoBuffer);
-
 		// sets up the table based on schoolInfoBuffer	
 		// var infoTableCol = dataTable;
-
-
 
 		var superTable = dataTable
 			.append("table");
@@ -949,8 +939,6 @@ function financify() {
 	financeInfo = d3.entries(financeInfoBuffer);
 	financeInfoKeys = d3.keys(financeInfoBuffer);
 
-	// console.log(financeInfoKeys);
-
 	xScale = d3.scale.ordinal()
 		.domain(financeInfoKeys)
 		.rangePoints([0, financialAidBarVis.w]);  // define the right domain generically
@@ -1027,7 +1015,15 @@ function financify() {
         .attr("class", "axis")
         .attr("id", "financialYAxis")
         .attr("transform", "translate(" + financialAidBarVis.chartX + "," + financialAidBarVis.chartY +")")
-        .call(fBYAxis);
+        .call(fBYAxis)
+        .append("text")
+	        .attr("transform", "rotate(-90)")
+	        .attr("y", -60)
+	        .attr("x", -financialAidBarVis.h/2)
+	        .attr("dy", "1em")
+	        .style("text-anchor", "middle")
+	        .text("Average financial aid ($)")
+	  			.attr("class", "tick");
 
     if (financeInfoBuffer["Average"] == 0) {
     	var blankAlert = financialAidBars.append("g")
@@ -1067,8 +1063,6 @@ function crimeify() {
 
 	crimeInfo = d3.entries(crimeInfoBuffer);
 	crimeInfoKeys = d3.keys(crimeInfoBuffer);
-
-	// console.log(crimeInfo);
 
 	xScale = d3.scale.ordinal()
 		.domain(crimeInfoKeys)
@@ -1146,7 +1140,15 @@ function crimeify() {
         .attr("class", "axis")
         .attr("id", "crimeYAxis")
         .attr("transform", "translate(" + crimeBarVis.chartX + "," + crimeBarVis.chartY +")")
-        .call(cBYAxis);
+        .call(cBYAxis)
+        .append("text")
+	        .attr("transform", "rotate(-90)")
+	        .attr("y", -40)
+	        .attr("x", -crimeBarVis.h/2)
+	        .attr("dy", "1em")
+	        .style("text-anchor", "middle")
+	        .text("Crimes per year")
+	  			.attr("class", "tick");
 
     if (crimeInfoBuffer["total"] == 0) {
     	var blankAlert = crimeBars.append("g")
