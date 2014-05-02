@@ -46,9 +46,10 @@
 			"raw/finance2012.csv",
 			"raw/AllStateCrimes2010.csv",
 			"raw/AllStateCrimes2011.csv",
-			"raw/AllStateCrimes2012.csv"
+			"raw/AllStateCrimes2012.csv",
 		];
 		_.each(files, function(f) { q.defer(d3.csv, f); });
+		q.defer(d3.json, "data/geocodingData.json");
 		q.await(function(error,
 				// nonCampusArrest, onCampusArrest, publicPropertyArrest, residenceHallArrest,
 				nonCampusCrime, onCampusCrime, publicPropertyCrime, residenceHallCrime,
@@ -58,10 +59,12 @@
 				finaid2010, finaid2011, finaid2012,
 				tuition2010, tuition2011, tuition2012,
 				finance2010, finance2011, finance2012,
-				allCrime2010, allCrime2011, allCrime2012
+				allCrime2010, allCrime2011, allCrime2012,
+				geocodingData
 			) {
 
 			var institutionsData = {};
+			var filteredInstitutionsData = {};
 			var statesData = {};
 
 			var parseCellToInt = function(cell) {
@@ -220,7 +223,7 @@
 				});
 			});
 
-			console.log("finished importing crime data, starting demographics data importing")
+			console.log("finished importing crime data, starting demographics data importing");
 
 			_.each([demographics2010, demographics2011, demographics2012], function(demographics_set) {
 				_.each(demographics_set, function(row) {
@@ -246,6 +249,9 @@
 							institutionsData[id].demographics.american_indian_alaska_native_total += american_indian_alaska_native_total;
 							institutionsData[id].demographics.american_indian_alaska_native_men += american_indian_alaska_native_men;
 							institutionsData[id].demographics.american_indian_alaska_native_women += american_indian_alaska_native_women;
+							institutionsData[id].demographics.asian_total += asian_total;
+							institutionsData[id].demographics.asian_men += asian_men;
+							institutionsData[id].demographics.asian_women += asian_women;
 							institutionsData[id].demographics.black_african_american_total += black_african_american_total;
 							institutionsData[id].demographics.black_african_american_men += black_african_american_men;
 							institutionsData[id].demographics.black_african_american_women += black_african_american_women;
@@ -276,6 +282,9 @@
 							institutionsData[id].demographics[level_name].american_indian_alaska_native_total += american_indian_alaska_native_total;
 							institutionsData[id].demographics[level_name].american_indian_alaska_native_men += american_indian_alaska_native_men;
 							institutionsData[id].demographics[level_name].american_indian_alaska_native_women += american_indian_alaska_native_women;
+							institutionsData[id].demographics[level_name].asian_total += asian_total;
+							institutionsData[id].demographics[level_name].asian_men += asian_men;
+							institutionsData[id].demographics[level_name].asian_women += asian_women;
 							institutionsData[id].demographics[level_name].black_african_american_total += black_african_american_total;
 							institutionsData[id].demographics[level_name].black_african_american_men += black_african_american_men;
 							institutionsData[id].demographics[level_name].black_african_american_women += black_african_american_women;
@@ -371,9 +380,7 @@
 
 			console.log("finished importing finance data, starting processing");
 
-			var num_institutions = _.keys(institutionsData).length, times_queried_maps_api = 0, num_positive_responses = 0;
-			var geocoder = new google.maps.Geocoder();
-			var index = 0;
+			var invalid_ids = [];
 			_.each(institutionsData, function(institution) {
 				if (institution.endowment_num_data > 1)
 					institution.endowment_assets /= institution.endowment_num_data;
@@ -408,33 +415,20 @@
 					}
 				}
 
-				// setTimeout(function() {
-				// 	var address = institution.address + ", " + institution.city + ", " + institution.state + " " + institution.zip;
-				// 	geocoder.geocode({address: address}, function(results, status) {
-				// 		if (status == google.maps.GeocoderStatus.OK) {
-				// 			institution.lonlat = [results[0].geometry.location.lng(), results[0].geometry.location.lat()];
-				// 			num_positive_responses++;
-				// 		}
-				// 		console.log("got response from google maps, positive = " + (status == google.maps.GeocoderStatus.OK));
-				// 		times_queried_maps_api++;
-				// 	});
-				// }, index * 5000);
-
-				index++;
+				var geocodingDatum = geocodingData[institution.id];
+				if (geocodingDatum !== undefined)
+					institution.lonlat = [geocodingDatum.lon, geocodingDatum.lat];
+				else
+					invalid_ids.push(institution.id);
 			});
+			filteredInstitutionsData = _.omit(institutionsData, invalid_ids);
 
-			// setTimeout(function() {
-			// 	if (times_queried_maps_api < num_institutions)
-			// 		return;
-
-			// 	console.log("num institutions = " + num_institutions + "; num positive responses = " + num_positive_responses);
-			// 	console.log(institutionsData);
-			// 	saveToFile(institutionsData, "institutionsData101112.json");
-			// }, 50000000);
-
+			console.log("total institutions = " + _.keys(institutionsData).length + "; filtered institutions = " + _.keys(filteredInstitutionsData).length);
+			console.log(filteredInstitutionsData);
+			saveToFile(filteredInstitutionsData, "institutionsData101112.json");
 			console.log("finished processing institutions data, starting compiling state data");
 
-			_.each(institutionsData, function(institution) {
+			_.each(filteredInstitutionsData, function(institution) {
 				var code = institution.state;
 				if (statesData[code] === undefined) {
 					statesData[code] = {
@@ -643,10 +637,9 @@
 					state.general_crime[crime] /= 3;
 			});
 
-			console.log("fnished computing averages, logging and outputting states data file");
-
 			console.log(statesData);
 			saveToFile(statesData, "statesData101112.json");
+			console.log("finished processing states data");
 			
 		});
 
