@@ -162,48 +162,6 @@ var loadStateData = function() {
 				var total = statesData[d.properties.code].college_crime.total;
 				return collegeCrimeScale(total);
 			});
-	
-defs.append('svg:linearGradient')
-  .attr('gradientUnits', 'userSpaceOnUse')
-  .attr('x1', 0).attr('y1', 0).attr('x2', 20).attr('y2', 0)
-  .attr('id', 'master').call(
-      function(gradient) {
-        gradient.append('svg:stop').attr('offset', '0%').attr('style', 'stop-color:rgb(0,0,0);stop-opacity:1');
-        gradient.append('svg:stop').attr('offset', '100%').attr('style', 'stop-color:rgb(0,0,0);stop-opacity:0');
-      });
-
-		var gradient = d3.select("#mainVisView")
-			.append("svg:defs")
-			.append("linearGradient")
-				.attr("id", "grad1")
-				.attr("x1", 0)
-				.attr("y1", 0)
-				.attr("x2", 100)
-				.attr("y2", 0)
-			.call(function(gradient) {
-			    gradient.append('svg:stop').attr('offset', '0%').attr('style', 'stop-color:rgb(68,68,68);stop-opacity:1');
-			    gradient.append('svg:stop').attr('offset', '100%').attr('style', 'stop-color:rgb(204,51,51);stop-opacity:0');
-		    });
-		gradient.append("stop")
-			.attr("offset", "0%")
-			.attr("class", "stop1")
-			.style({
-				'stop-color': 'rgb(68,68,68)',
-				'stop-opacity': 1
-			});
-		gradient.append("stop")
-			.attr("offset", "0%")
-			.attr("class", "stop1")
-			.style({
-				'stop-color': 'rgb(204,51,51)',
-				'stop-opacity': 1
-			});
-		mainVisFrame.append("rect")
-			.attr("x", 400)
-			.attr("y", -50)
-			.attr("width", "150px")
-			.attr("height", "20px")
-			.attr("fill", "url(#grad1)");
 
 		//load data for state average of university detail vis, set selected state name and selected object as the variable for school name and school object to maintain the same configuration 
 		var selectedSchool = selectedState;
