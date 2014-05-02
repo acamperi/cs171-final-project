@@ -102,9 +102,13 @@ var tooltip = d3.select("#mainVis").append("div").attr("class", "tooltip");
 // for state-based zoom functionality
 var centered;
 
+var allSchoolObjects = [];
+var numberSchoolObjects = 0;
+
 // for when a school has been selected or not
 var selectedSchool = null;
 var selectedSchoolObject = null;
+var comparedSchoolObject = null;
 
 var selectedStateName = null;
 
@@ -145,9 +149,106 @@ var path = d3.geo.path().projection(projection);
 //   MAIN VISUALIZATION SETUP
 // ============================
 
+function replaceAll(find, replace, str) {
+   return str.replace(new RegExp(find, 'g'), replace);
+ }
+ 
+ function search(str)
+ {
+ 	var newStr = str.toLowerCase();
+ 	newStr = newStr.replace(/[^a-zA-Z0-9-\s]/g, '').replace(/\s{2,}/g, ' ');
+ 	var onlyOneWord = false;
+ 	if (newStr.split(" ").length == 1)
+ {
+ 		onlyOneWord = true;
+ 		newStr += " ";
+ 	}
+ 
+ 	var invalid_words = ["school", "university", "seminary", "college"];
+ 	var reducedStr = newStr;
+ 	invalid_words.forEach(function(x){
+ 		reducedStr = replaceAll(x, "", reducedStr);
+ 	});
+ 
+ 	var regex = new RegExp(newStr, "i");
+ 	var exploded = reducedStr.split(" ");
+ 	var regexes = [];
+ 	exploded.forEach(function(x){
+ 		regexes.push(new RegExp(x, "i"));
+ 	});
+ 	var bestOption;
+ 	var bestOptionMatches = 0;
+ 	var numberWords = exploded.length
+ 
+ 	for (var i = 0; i < numberSchoolObjects; i++)
+ 	{
+ 		var schoolObject = allSchoolObjects[i];
+ 		var initialSearch = schoolObject.name.match(regex);
+ 
+ 		if (initialSearch != null)
+ 		{
+ 			bestOption = schoolObject;
+ 			if ((initialSearch.length == 1 && initialSearch[0].length == schoolObject.name.length) ||
+ 			 (onlyOneWord && initialSearch[0].charAt(0) == schoolObject.name.charAt(0)))
+ 			{
+ 				break;
+ 			}
+ 		}
+ 		else
+ 		{
+ 			var matches = 0;
+ 			regexes.forEach(function(reg){
+ 				if (schoolObject.name.search(reg) != -1)
+ 					matches++;
+ 			});
+ 			if (matches > bestOptionMatches)
+ 			{
+ 			bestOptionMatches = matches;
+ 				bestOption = schoolObject;
+ 			}
+ 		}
+ 	};
+ 
+ 	return bestOption;
+ 
+ }
+ 
+ d3.select("#searchButton").on("click", function () {
+ 	selectSchoolObject(search($("#searchField").val()));
+ })
+ 
+ $("#searchField").keyup(function (e) {
+     if (e.keyCode == 13) {
+         selectSchoolObject(search($("#searchField").val()));
+     }
+ });
+
+
 var toggleSelected = function(id) {
 	// change map visualization to reflect selected metric
 };
+
+function selectSchoolObject(x)
+ {
+ 	$("#searchField").val(x.name);
+ 
+ 	selectedSchoolObject = x;
+ 
+ 	if(newPage == true) {
+ 		d3.select("#clickPlease")
+ 			.remove();
+ 		newPage = false;
+ 		tabbify();
+ 	}
+ 
+ 	if (currentTab != 3)
+ 		detailify();
+ 	else
+ 		compare();
+ 
+ 	d3.selectAll(".thisSchool")
+ 		.attr("class", "school");
+ }
 
 var loadStateData = function() {
 	d3.json("data/statesData101112.json", function(error, statesData) {
@@ -194,6 +295,8 @@ var loadInstitutionData = function() {
 		{
 			var computed_projection = projection(data[schoolID]["lonlat"]);
 			if (computed_projection !== null) {
+				allSchoolObjects.push(data[schoolID]);
+ 				numberSchoolObjects++;
 				schoolIDList.push(schoolID);
 				projections.push(computed_projection);
 			}
@@ -229,6 +332,8 @@ var loadInstitutionData = function() {
 			}
 
 			detailify();
+
+			selectSchoolObject(data[x]);
 
 			d3.selectAll(".thisSchool")
 				.attr("class", "school");
@@ -554,8 +659,13 @@ function tabbify() {
 				.attr("fill", "#BBBBBB");
 
 			d3.select("#dataTable").style("opacity", "1");
+			d3.select("#dataTable").classed("fullyHidden", false).classed("fullyVisible", true);
+ 			d3.select("#rootTable").style("opacity", "0");
+ 			d3.select("#rootTable").classed("fullyHidden", true).classed("fullyVisible", false);
 
 			currentTab = 1;
+			if (needsDetailify)
+ 				detailify();
 		}
 	});
 
@@ -579,8 +689,14 @@ function tabbify() {
 				.attr("fill", "#BBBBBB");
 
 			d3.select("#dataTable").style("opacity", "1");
+			d3.select("#dataTable").classed("fullyHidden", false).classed("fullyVisible", true);
+ 			d3.select("#rootTable").style("opacity", "0");
+ 			d3.select("#rootTable").classed("fullyHidden", true).classed("fullyVisible", false);
 
 			currentTab = 2;
+
+			if (needsDetailify)
+ 				detailify();
 		}
 	});
 
@@ -605,8 +721,13 @@ function tabbify() {
 					.attr("fill", "#FFFFFF");
 
 				d3.select("#dataTable").style("opacity", "0");
+				d3.select("#dataTable").classed("fullyHidden", true).classed("fullyVisible", false);
+ 				d3.select("#rootTable").style("opacity", "1");
+ 				d3.select("#rootTable").classed("fullyHidden", false).classed("fullyVisible", true);
 
 				currentTab = 3;
+
+				needsDetailify = true;
 			}
 		});
 	}
@@ -625,6 +746,10 @@ function detailify() {
 		// removes table
 		vis1.select("#dataTable")
 			.remove();
+
+		// removes comparison stuff
+		vis1.select("#rootTable")
+ 			.remove();
 
 		// removes everything from the canvas
 		svg1 = vis1.select("#canvas");
@@ -647,6 +772,7 @@ function detailify() {
 	pieBaker();
 	financify();
 	crimeify();
+	comparify();
 	detailified = true;
 }
 
@@ -713,12 +839,12 @@ function tablify() {
 
 		// adds school name
 		if (statetab == 0) {
-			var name = d3.select("#detailVis")
+			largeName = d3.select("#detailVis")
 				.insert("h2", "#dataTable")
 				.text(schoolName);
 		}
 		else if (statetab == 1) {
-			var name = d3.select("#detailVis")
+			largeName = d3.select("#detailVis")
 				.insert("h2", "#dataTable")
 				.text(selectedStateName);
 		}
@@ -760,6 +886,294 @@ function tablify() {
 	    searchForImageForCollege(schoolName);
 	}
 }
+
+var comparisonCol;
+ 
+ function compare()
+ {
+ 	d3.select("#comparisonTable").remove();
+ 
+ 	largeName.text(selectedSchoolObject.name);
+ 
+ 	// var comparisonData = [["", selectedSchoolObject.name, comparedSchoolObject.name]];
+ 	var comparisonData = [["", selectedSchoolObject.name, comparedSchoolObject.name]];
+ 
+ 	var males1 = parseInt(selectedSchoolObject["demographics"]["total_men"]);
+ 	var females1 = parseInt(selectedSchoolObject["demographics"]["total_women"]);
+ 	var total1 = parseInt(selectedSchoolObject["demographics"]["total"]);
+ 
+ 	var males2 = parseInt(comparedSchoolObject["demographics"]["total_men"]);
+ 	var females2 = parseInt(comparedSchoolObject["demographics"]["total_women"]);
+ 	var total2 = parseInt(comparedSchoolObject["demographics"]["total"]);
+ 
+ 	var malesProp1 = parseFloat(males1 / total1).toFixed(3).replace(/\b0+/g, "").replace(/0*$/, '');
+ 	var femalesProp1 = parseFloat(females1 / total1).toFixed(3).replace(/\b0+/g, "").replace(/0*$/, '');
+ 	var malesProp2 = parseFloat(males2 / total2).toFixed(3).replace(/\b0+/g, "").replace(/0*$/, '');
+ 	var femalesProp2 = parseFloat(females2 / total2).toFixed(3).replace(/\b0+/g, "").replace(/0*$/, '');
+ 
+ 	if (malesProp1 == ".")
+ 		malesProp1 = "0.";
+ 	if (femalesProp1 == ".")
+ 		femalesProp1 = "0.";
+ 	if (malesProp2 == ".")
+ 		malesProp2 = "0.";
+ 	if (femalesProp2 == ".")
+ 		femalesProp2 = "0.";
+ 
+ 	comparisonData.push([["Gender Split M/F", "default_compare"],
+ 	 [malesProp1 + "/" + femalesProp1, "default_compare"],
+ 	 [malesProp2 + "/" + femalesProp2, "default_compare"]]);
+ 
+ 	raceInfoBuffer1 = {};
+ 	raceInfoBuffer2 = {};
+ 
+     raceInfoBuffer1["Black/African-American"] = parseInt(selectedSchoolObject["demographics"]["black_african_american_total"]);
+     raceInfoBuffer1["Asian"] = parseInt(selectedSchoolObject["demographics"]["asian_total"]);
+     raceInfoBuffer1["White"] = parseInt(selectedSchoolObject["demographics"]["white_total"]);
+     raceInfoBuffer1["Hispanic/Latinx"] = parseInt(selectedSchoolObject["demographics"]["hispanic_latino_total"]);
+     raceInfoBuffer1["Native Hawaiian/Other Pacific Islander"] = parseInt(selectedSchoolObject["demographics"]["native_hawaiian_other_pacific_islander_total"]);
+ 	raceInfoBuffer1["American Indian/Alaska Native"] = parseInt(selectedSchoolObject["demographics"]["american_indian_alaska_native_total"]);
+ 	raceInfoBuffer1["Multiracial"] = parseInt(selectedSchoolObject["demographics"]["two_plus_races_total"]);
+ 	raceInfoBuffer1["International"] = parseInt(selectedSchoolObject["demographics"]["nonresident_alien_total"]);
+ 
+ 	raceInfoBuffer2["Black/African-American"] = parseInt(comparedSchoolObject["demographics"]["black_african_american_total"]);
+     raceInfoBuffer2["Asian"] = parseInt(comparedSchoolObject["demographics"]["asian_total"]);
+     raceInfoBuffer2["White"] = parseInt(comparedSchoolObject["demographics"]["white_total"]);
+     raceInfoBuffer2["Hispanic/Latinx"] = parseInt(comparedSchoolObject["demographics"]["hispanic_latino_total"]);
+     raceInfoBuffer2["Native Hawaiian/Other Pacific Islander"] = parseInt(comparedSchoolObject["demographics"]["native_hawaiian_other_pacific_islander_total"]);
+ 	raceInfoBuffer2["American Indian/Alaska Native"] = parseInt(comparedSchoolObject["demographics"]["american_indian_alaska_native_total"]);
+ 	raceInfoBuffer2["Multiracial"] = parseInt(comparedSchoolObject["demographics"]["two_plus_races_total"]);
+ 	raceInfoBuffer2["International"] = parseInt(comparedSchoolObject["demographics"]["nonresident_alien_total"]);
+ 
+ 	var totalPop1 = 
+ 		raceInfoBuffer1["Black/African-American"] +
+ 		raceInfoBuffer1["Asian"] +
+ 		raceInfoBuffer1["White"] +
+ 		raceInfoBuffer1["Hispanic/Latinx"] +
+ 		raceInfoBuffer1["Native Hawaiian/Other Pacific Islander"] +
+ 		raceInfoBuffer1["American Indian/Alaska Native"] +
+ 		raceInfoBuffer1["Multiracial"] +
+ 		raceInfoBuffer1["International"];
+ 
+ 	var totalPop2 = 
+ 		raceInfoBuffer2["Black/African-American"] +
+ 		raceInfoBuffer2["Asian"] +
+		raceInfoBuffer2["White"] +
+		raceInfoBuffer2["Hispanic/Latinx"] +
+ 		raceInfoBuffer2["Native Hawaiian/Other Pacific Islander"] +
+ 		raceInfoBuffer2["American Indian/Alaska Native"] +
+ 		raceInfoBuffer2["Multiracial"] +
+ 		raceInfoBuffer2["International"];
+ 
+ 	raceProportionsBuffer1 = {};
+ 	raceProportionsBuffer1["Black/African-American"] = raceInfoBuffer1["Black/African-American"]/totalPop1;
+ 	raceProportionsBuffer1["Asian"] = raceInfoBuffer1["Asian"]/totalPop1;
+ 	raceProportionsBuffer1["White"] = raceInfoBuffer1["White"]/totalPop1;
+ 	raceProportionsBuffer1["Hispanic/Latinx"] = raceInfoBuffer1["Hispanic/Latinx"]/totalPop1;
+ 	raceProportionsBuffer1["Native Hawaiian/Other Pacific Islander"] = raceInfoBuffer1["Native Hawaiian/Other Pacific Islander"]/totalPop1;
+ 	raceProportionsBuffer1["American Indian/Alaska Native"] = raceInfoBuffer1["American Indian/Alaska Native"]/totalPop1;
+ 	raceProportionsBuffer1["Multiracial"] = raceInfoBuffer1["Multiracial"]/totalPop1;
+ 	raceProportionsBuffer1["International"] = raceInfoBuffer1["International"]/totalPop1;
+ 
+ 	raceProportionsBuffer2 = {};
+ 	raceProportionsBuffer2["Black/African-American"] = raceInfoBuffer2["Black/African-American"]/totalPop2;
+ 	raceProportionsBuffer2["Asian"] = raceInfoBuffer2["Asian"]/totalPop2;
+ 	raceProportionsBuffer2["White"] = raceInfoBuffer2["White"]/totalPop2;
+ 	raceProportionsBuffer2["Hispanic/Latinx"] = raceInfoBuffer2["Hispanic/Latinx"]/totalPop2;
+ 	raceProportionsBuffer2["Native Hawaiian/Other Pacific Islander"] = raceInfoBuffer2["Native Hawaiian/Other Pacific Islander"]/totalPop2;
+ 	raceProportionsBuffer2["American Indian/Alaska Native"] = raceInfoBuffer2["American Indian/Alaska Native"]/totalPop2;
+ 	raceProportionsBuffer2["Multiracial"] = raceInfoBuffer2["Multiracial"]/totalPop2;
+ 	raceProportionsBuffer2["International"] = raceInfoBuffer2["International"]/totalPop2;
+ 
+ 	comparisonData.push([["Total Student Enrollment", "light_gray_compare"],
+ 	 [parseFloat(totalPop1).toString(), "light_gray_compare"],
+ 	 [parseFloat(totalPop2).toString(), "light_gray_compare"]]);
+ 	for (var key in raceProportionsBuffer1)
+ 	{
+ 		var prop1 = parseFloat(raceProportionsBuffer1[key]).toFixed(3).replace(/\b0+/g, "").replace(/0*$/, '');
+ 		var prop2 = parseFloat(raceProportionsBuffer2[key]).toFixed(3).replace(/\b0+/g, "").replace(/0*$/, '');
+ 		if (prop1 == ".")
+ 			prop1 = "0";
+ 		if (prop2 == ".")
+ 			prop2 = "0";
+ 
+ 		comparisonData.push([[key, "light_gray_compare"], [prop1, "light_gray_compare"], [prop2, "light_gray_compare"]]);
+ 	}
+ 
+ 	crimeInfoBuffer1 = {};
+ 	crimeInfoBuffer1["Total"] = parseInt(selectedSchoolObject["crime"]["total"]);
+ 	crimeInfoBuffer1["Murder"] = parseInt(selectedSchoolObject["crime"]["murder"]);
+ 	crimeInfoBuffer1["Negligent Manslaughter"] = parseInt(selectedSchoolObject["crime"]["negligent_manslaughter"]);
+ 	crimeInfoBuffer1["Forcible Sex Offense"] = parseInt(selectedSchoolObject["crime"]["forcible_sex_offense"]);
+ 	crimeInfoBuffer1["Nonforcible Sex Offense"] = parseInt(selectedSchoolObject["crime"]["nonforcible_sex_offense"]);
+ 	crimeInfoBuffer1["Robbery"] = parseInt(selectedSchoolObject["crime"]["robbery"]);
+ 	crimeInfoBuffer1["Aggravated Assault"] = parseInt(selectedSchoolObject["crime"]["aggravated_assault"]);
+ 	crimeInfoBuffer1["Burglary"] = parseInt(selectedSchoolObject["crime"]["burglary"]);
+ 	crimeInfoBuffer1["Motor Vehicle Theft"] = parseInt(selectedSchoolObject["crime"]["motor_vehicle_theft"]);
+ 	crimeInfoBuffer1["Arson"] = parseInt(selectedSchoolObject["crime"]["arson"]);
+ 
+ 	crimeInfoBuffer2 = {};
+ 	crimeInfoBuffer2["Total"] = parseInt(comparedSchoolObject["crime"]["total"]);
+ 	crimeInfoBuffer2["Murder"] = parseInt(comparedSchoolObject["crime"]["murder"]);
+ 	crimeInfoBuffer2["Negligent Manslaughter"] = parseInt(comparedSchoolObject["crime"]["negligent_manslaughter"]);
+ 	crimeInfoBuffer2["Forcible Sex Offense"] = parseInt(comparedSchoolObject["crime"]["forcible_sex_offense"]);
+ 	crimeInfoBuffer2["Nonforcible Sex Offense"] = parseInt(comparedSchoolObject["crime"]["nonforcible_sex_offense"]);
+ 	crimeInfoBuffer2["Robbery"] = parseInt(comparedSchoolObject["crime"]["robbery"]);
+ 	crimeInfoBuffer2["Aggravated Assault"] = parseInt(comparedSchoolObject["crime"]["aggravated_assault"]);
+ 	crimeInfoBuffer2["Burglary"] = parseInt(comparedSchoolObject["crime"]["burglary"]);
+ 	crimeInfoBuffer2["Motor Vehicle Theft"] = parseInt(comparedSchoolObject["crime"]["motor_vehicle_theft"]);
+	crimeInfoBuffer2["Arson"] = parseInt(comparedSchoolObject["crime"]["arson"]);
+ 
+ 	for (var key in crimeInfoBuffer1)
+ 	{
+ 		var prop1 = parseFloat(crimeInfoBuffer1[key]);
+ 		var prop2 = parseFloat(crimeInfoBuffer2[key]);
+ 
+ 		comparisonData.push([[key, "enrollment_compare"],
+ 		 [crimeInfoBuffer1[key], prop1 > prop2 ? "worse_compare" : "better_compare"],
+ 		 [crimeInfoBuffer2[key], prop2 > prop1 ? "worse_compare" : "better_compare"]]);
+ 	}
+
+ 	var table = comparisonCol.append("table").attr("id", "comparisonTable");
+ 	var tbody = table.append("tbody");
+ 	var rows = tbody.selectAll("tr")
+ 	.data(comparisonData)
+ 	.enter()
+ 	.append("tr")
+ 	.selectAll("td")
+ 	.data(function(d) { return d; })
+ 	.enter()
+ 	.append("td")
+ 	.text(function(d){
+ 		return d[0];
+ 	})
+ 	.classed("default_compare", function(d){
+ 		return d[1] == "default_compare";
+ 	})
+ 	.classed("worse_compare", function(d){
+ 		return d[1] == "worse_compare";
+ 	})
+ 	.classed("better_compare", function(d){
+ 		return d[1] == "better_compare";
+ 	})
+ 	.classed("enrollment_compare", function(d){
+ 		return d[1] == "enrollment_compare";
+ 	})
+ 	.classed("light_gray_compare", function(d){
+ 		return d[1] == "light_gray_compare";
+ 	})
+ 	.classed("compare_cell", true);
+ }
+ 
+ function comparify()
+ {
+ 	if (selectedSchoolObject != null) {
+ 		// collecting only pertinent data from the selectedSchoolObject
+ 		schoolName = selectedSchoolObject["name"];
+ 		// schoolBranch = selectedSchoolObject["branch"];
+ 		schoolInfoBuffer = {};
+ 		schoolInfoBuffer["Street Address"] = selectedSchoolObject["address"];
+ 		schoolInfoBuffer["City, State, Zip Code"] = selectedSchoolObject["city"] + ", " + selectedSchoolObject["state"] + " " + selectedSchoolObject["zip"];
+ 		// schoolInfoBuffer["Total Assets"] = selectedSchoolObject["endowment_assets"];
+ 		schoolInfoBuffer["Enrollment"] = selectedSchoolObject["demographics"]["total"];
+ 
+ 		var rootTable = d3.select("#detailVis")
+ 			.insert("div", "#canvas")
+ 		.attr("id", "rootTable")
+ 			.attr("class", "tab3")
+ 			.style("padding", "0px");
+ 
+ 
+ 		// adds school name
+ 		// var name = d3.select("#detailVis")
+ 		// 	.insert("h2", "#dataTable")
+ 		// 	.text(schoolName);
+ 
+ 		// console.log(schoolInfoBuffer);
+ 
+ 		// sets up the table based on schoolInfoBuffer	
+ 		// var infoTableCol = dataTable;
+ 
+ 
+ 
+ 		var outerTable = rootTable
+ 			.append("table");
+ 
+ 		var outerTBody = outerTable.append("tbody");
+ 		var searchBarCol = outerTBody.append("tr").style("background-color", "#222222").append("td").style("background-color", "#222222");
+ 		comparisonCol = outerTBody.append("tr").style("background-color", "#222222").append("td").style("background-color", "#222222");
+ 
+ 		var searchBar = searchBarCol.append("input").attr("type", "search").attr("placeholder", "Compare With School").attr("id", "comparisonField");
+ 		var searchBarButton = searchBarCol.append("button").attr("id", "compareButton").text("Compare");
+ 
+ 		if (comparedSchoolObject != null)
+ 		{
+ 			
+ 		}
+ 
+ 		d3.select("#compareButton").on("click", function () {
+ 			comparedSchoolObject = search($("#comparisonField").val());
+ 			compare();
+ 		})
+ 
+ 		$("#comparisonField").keyup(function (e) {
+ 		    if (e.keyCode == 13) {
+ 		        comparedSchoolObject = search($("#comparisonField").val());
+ 		        compare();
+ 		    }
+ 		});
+ 
+ 		if (comparedSchoolObject != null)
+ 		{
+ 			$("#comparisonField").val(comparedSchoolObject.name);
+ 		compare();
+ 			// $("#comparisonField").val(comparedSchoolObject.name);
+ 
+			// build data array of arrays
+ 			// var comparisonData = [["", selectedSchoolObject.name, comparedSchoolObject.name]];
+ 
+ 			// var table = comparisonCol.append("table");
+ 			// var tbody = table.append("tbody");
+ 			// var rows = tbody.selectAll("tr")
+ 			// .data(comparisonData)
+ 			// .enter()
+			// .append("tr")
+ 		// .enter()
+ 			// .append("td")
+ 			// .text(function(d){
+ 			// 	return d;
+ 			// })
+ 
+ 			// var table = infoTableCol
+ 			// 	.append("table");
+ 			// var tbody = table.append("tbody");
+ 			// var rows = tbody.selectAll("tr")
+ 			// 	.data(d3.entries(schoolInfoBuffer)) // d3.entries converts objects into entries with key:key value:value parameters
+ 			// 	.enter()
+ 			// 	.append("tr");
+ 
+ 			// adds left-side table headers
+ 			// rows.append("th")
+ 			// 	.text(function(d){
+ 			// 		return d.key;
+			// 	});
+ 
+ 			// adds values
+			// rows.append("td")
+			// 	.text(function(d){
+			// 		return d.value;
+			// 	});
+		}
+
+		
+
+		if (currentTab != 3) {
+	    	d3.select("#rootTable").style("opacity", "0")
+	    	.classed("fullyHidden", true).classed("fullyVisible", false);
+	    }
+	}
+}
+
 
 // function for making the gender proportion bars
 function genderize() {
