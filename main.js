@@ -116,6 +116,8 @@ var detailified = false;
 var currentTab = 1;
 var newPage = true;
 
+var largeName;
+
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
 // ==============================
@@ -233,6 +235,8 @@ function selectSchoolObject(x)
  	$("#searchField").val(x.name);
  
  	selectedSchoolObject = x;
+
+ 	largeName.text(selectedSchoolObject.name);
  
  	if(newPage == true) {
  		d3.select("#clickPlease")
