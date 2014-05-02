@@ -57,8 +57,8 @@ var racePieVis = {
 
 var financialAidBarVis = {
 	yAxisW: 20,
-	x: genderBarVis.x + genderBarVis.w + 70,
-	chartX: 40 + genderBarVis.x + genderBarVis.w + 70,
+	x: genderBarVis.x + genderBarVis.w + 90,
+	chartX: 40 + genderBarVis.x + genderBarVis.w + 90,
 	y: genderBarVis.y,
 	chartY: 10 + genderBarVis.y,
 	w: 150,
@@ -708,6 +708,12 @@ function statedetailify() {
 			.remove();
 
 	}
+
+	// add state name
+	var name = d3.select("#detailVis")
+		.insert("h2", "#canvas")
+		.text(selectedStateName);
+
 	detailified = false;
 	genderize();
 	pieBaker();
