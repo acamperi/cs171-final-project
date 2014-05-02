@@ -735,6 +735,7 @@ function tabbify() {
 
 // function that generates all the detail visualizations
 function detailify() {
+	needsDetailify = false;
 	if (detailified === true) {
 		// selects visualization
 		vis1 = d3.select("#detailVis");
