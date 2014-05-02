@@ -116,6 +116,8 @@ var detailified = false;
 var currentTab = 1;
 var newPage = true;
 
+var largeName;
+
 // ==============================
 //   CANVAS AND VISFRAMES SETUP
 // ==============================
@@ -233,6 +235,8 @@ function selectSchoolObject(x)
  	$("#searchField").val(x.name);
  
  	selectedSchoolObject = x;
+
+ 	largeName.text(selectedSchoolObject.name);
  
  	if(newPage == true) {
  		d3.select("#clickPlease")
@@ -735,6 +739,7 @@ function tabbify() {
 
 // function that generates all the detail visualizations
 function detailify() {
+	needsDetailify = false;
 	if (detailified === true) {
 		// selects visualization
 		vis1 = d3.select("#detailVis");
@@ -838,11 +843,17 @@ function tablify() {
 			.style("padding", "0px");
 
 		// adds school name
-		
-		largeName = d3.select("#detailVis")
-			.insert("h2", "#dataTable")
-			.text(schoolName);
-		
+		// if (statetab == 0) {
+			largeName = d3.select("#detailVis")
+				.insert("h2", "#dataTable")
+				.text(schoolName);
+		// }
+		// else if (statetab == 1) {
+		// 	largeName = d3.select("#detailVis")
+		// 		.insert("h2", "#dataTable")
+		// 		.text(selectedStateName);
+		// }
+
 		// sets up the table based on schoolInfoBuffer	
 		// var infoTableCol = dataTable;
 
